@@ -1,3 +1,5 @@
+import type { PrInfo } from "./github.ts";
+
 export type RuleFindingType =
   | "permission"
   | "dependency"
@@ -14,5 +16,40 @@ export type RuleFinding = {
   level: RuleFindingLevel;
   filePath: string;
   message: string;
+};
+
+export type AnalysisStatus = "completed";
+
+export type AnalysisRisk = {
+  type: RuleFindingType;
+  level: RuleFindingLevel;
+  filePath: string;
+  message: string;
+  suggestion: string;
+};
+
+export type ReviewSuggestion = {
+  filePath: string;
+  message: string;
+};
+
+export type FileSummary = {
+  filePath: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  summary: string;
+};
+
+export type AnalysisResult = {
+  analysisId: string;
+  status: AnalysisStatus;
+  prInfo: PrInfo;
+  summary: string;
+  risks: AnalysisRisk[];
+  reviewSuggestions: ReviewSuggestion[];
+  fileSummaries: FileSummary[];
+  ruleFindings: RuleFinding[];
 };
 
