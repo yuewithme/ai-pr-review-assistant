@@ -1,0 +1,19 @@
+[project]
+name = "ai-pr-review-assistant"
+version = "0.1.0"
+description = "AI-assisted GitHub Pull Request review tool."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "AI PR Review Assistant Contributors" }
+]
+dependencies = []
+
+[project.scripts]
+ai-pr-review = "ai_pr_review.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
