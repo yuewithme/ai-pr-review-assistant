@@ -1,5 +1,6 @@
 import { fetchPrData, GitHubApiError } from "../../../../lib/github.ts";
 import { parseGitHubPrUrl, PrUrlParseError } from "../../../../lib/parser.ts";
+import { checkRules } from "../../../../lib/rule-checker.ts";
 import { errorResponse, successResponse } from "../../../../lib/response.ts";
 
 type FetchPrRequestBody = {
@@ -23,7 +24,10 @@ export async function POST(request: Request): Promise<Response> {
     const parsedPrUrl = parseGitHubPrUrl(body.prUrl);
     const prData = await fetchPrData(parsedPrUrl);
 
-    return successResponse(prData);
+    return successResponse({
+      ...prData,
+      ruleFindings: checkRules(prData.files),
+    });
   } catch (error) {
     if (error instanceof PrUrlParseError) {
       return errorResponse(error.code, error.message);

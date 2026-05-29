@@ -55,6 +55,7 @@ test("POST /api/pr/fetch returns fetched PR data", async () => {
   assert.equal(body.success, true);
   assert.equal(body.data.pr.title, "Add parser");
   assert.equal(body.data.files[0].patch, "@@ -1 +1 @@");
+  assert.deepEqual(body.data.ruleFindings, []);
 });
 
 test("POST /api/pr/fetch returns parser errors", async () => {
@@ -77,4 +78,3 @@ test("POST /api/pr/fetch returns parser errors", async () => {
     },
   });
 });
-
