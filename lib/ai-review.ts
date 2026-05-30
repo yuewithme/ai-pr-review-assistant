@@ -11,7 +11,7 @@ import type {
 import type { AiReviewContext } from "../types/ai-context.ts";
 import type { ChangedFile, ContextFile, FetchedPrData, PrInfo } from "../types/github.ts";
 
-const DEEPSEEK_MODEL = "deepseek-v4-pro";
+const DEEPSEEK_MODEL = "deepseek-v4-flash";
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
 const SYSTEM_PROMPT = `You are an experienced senior code reviewer. Analyze a GitHub Pull Request using only the provided PR metadata, changed files, diff patches, limited context files, and rule precheck findings.

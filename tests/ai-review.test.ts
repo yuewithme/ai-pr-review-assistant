@@ -104,7 +104,7 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
   assert.equal(result.risks[0].filePath, "src/auth/middleware.ts");
   assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
   assert.match(requestBody, /Return strict JSON only/);
-  assert.match(requestBody, /deepseek-v4-pro/);
+  assert.match(requestBody, /deepseek-v4-flash/);
 });
 
 test("analyzePullRequest falls back when AI JSON cannot be parsed", async () => {

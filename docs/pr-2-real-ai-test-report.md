@@ -8,7 +8,7 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
 
 Test goal:
 
-Verify the end-to-end backend flow with a real GitHub PR and DeepSeek V4 Pro analysis.
+Verify the end-to-end backend flow with a real GitHub PR and DeepSeek V4 Flash analysis.
 
 ## Result Summary
 
@@ -184,4 +184,3 @@ Adds GitHub PR fetch API with types, REST client, and a POST /api/pr/fetch route
 - The test used `DEEPSEEK_API_KEY` from the local environment.
 - No API key is included in this report.
 - The result confirms that PR parsing, GitHub fetching, patch extraction, rule precheck, context building, and DeepSeek analysis work together end to end.
-

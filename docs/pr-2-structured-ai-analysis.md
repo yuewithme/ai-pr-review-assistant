@@ -12,13 +12,13 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
 标准化 AiReviewContext
   -> 中文 System Prompt
   -> JSON payload User Prompt
-  -> DeepSeek V4 Pro
+  -> DeepSeek V4 Flash
   -> 结构化中文 JSON 分析结果
 ```
 
 说明：
 
-- 本次分析使用真实 DeepSeek V4 Pro 返回结果。
+- 本次分析使用真实 DeepSeek V4 Flash 返回结果。
 - 输出目标是结构化 JSON，不是 Markdown 报告。
 - 结果可继续交给后续 `report-renderer` 展开成前端报告页、CLI 报告或 GitHub 评论。
 - 本文档不包含任何 API Key。
@@ -284,4 +284,3 @@ JSON 字符串中不要包含正则字面量或反斜杠；如果需要描述正
 ```
 
 这说明后续正式实现提示词时，需要把“严格 JSON 可解析性”作为硬性约束。
-
