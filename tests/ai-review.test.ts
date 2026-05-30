@@ -41,11 +41,12 @@ const ruleFindings: RuleFinding[] = [
 ];
 
 test("analyzePullRequest returns structured AI JSON with stable metadata", async () => {
-  process.env.OPENAI_API_KEY = "test-key";
-  process.env.OPENAI_MODEL = "test-model";
+  process.env.DEEPSEEK_API_KEY = "test-key";
   let requestBody = "";
+  let requestUrl = "";
 
-  globalThis.fetch = async (_url, init) => {
+  globalThis.fetch = async (url, init) => {
+    requestUrl = String(url);
     assert.equal((init?.headers as Record<string, string>).Authorization, "Bearer test-key");
     requestBody = String(init?.body);
 
@@ -101,12 +102,13 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
   assert.equal(result.summary, "Auth middleware behavior changed.");
   assert.equal(result.risks[0].confidence, 0.82);
   assert.equal(result.risks[0].filePath, "src/auth/middleware.ts");
+  assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
   assert.match(requestBody, /Return strict JSON only/);
-  assert.match(requestBody, /test-model/);
+  assert.match(requestBody, /deepseek-v4-pro/);
 });
 
 test("analyzePullRequest falls back when AI JSON cannot be parsed", async () => {
-  process.env.OPENAI_API_KEY = "test-key";
+  process.env.DEEPSEEK_API_KEY = "test-key";
 
   globalThis.fetch = async () =>
     new Response(
@@ -128,7 +130,7 @@ test("analyzePullRequest falls back when AI JSON cannot be parsed", async () => 
 });
 
 test("analyzePullRequest truncates long patches before sending to AI", async () => {
-  process.env.OPENAI_API_KEY = "test-key";
+  process.env.DEEPSEEK_API_KEY = "test-key";
   const longPatch = `+${"x".repeat(20_000)}`;
   let requestBody = "";
 
@@ -182,4 +184,3 @@ test("analyzePullRequest truncates long patches before sending to AI", async () 
   assert.ok(requestBody.length < 15_000);
   assert.match(requestBody, /truncated/);
 });
-

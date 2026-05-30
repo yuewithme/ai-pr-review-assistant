@@ -11,8 +11,8 @@ import type {
 import type { AiReviewContext } from "../types/ai-context.ts";
 import type { ChangedFile, ContextFile, FetchedPrData, PrInfo } from "../types/github.ts";
 
-const DEFAULT_AI_MODEL = "gpt-4o-mini";
-const DEFAULT_AI_BASE_URL = "https://api.openai.com/v1";
+const DEEPSEEK_MODEL = "deepseek-v4-pro";
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
 const SYSTEM_PROMPT = `You are an experienced senior code reviewer. Analyze a GitHub Pull Request using only the provided PR metadata, changed files, diff patches, limited context files, and rule precheck findings.
 
@@ -91,7 +91,7 @@ type ChatCompletionResponse = {
 export async function analyzePullRequest(
   input: AnalyzePullRequestInput,
 ): Promise<AnalyzePullRequestOutput> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey) {
     return fallbackAnalysis(input);
@@ -112,16 +112,14 @@ async function callAiApi(
   context: AiReviewContext,
   apiKey: string,
 ): Promise<string> {
-  const model = process.env.OPENAI_MODEL ?? DEFAULT_AI_MODEL;
-  const baseUrl = process.env.OPENAI_BASE_URL ?? DEFAULT_AI_BASE_URL;
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      model: DEEPSEEK_MODEL,
       response_format: { type: "json_object" },
       temperature: 0.2,
       messages: [
