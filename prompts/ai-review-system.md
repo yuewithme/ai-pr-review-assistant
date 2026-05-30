@@ -37,3 +37,12 @@
 
 13. JSON 字符串中不要包含未转义的反斜杠。如果需要描述正则表达式，请优先用自然语言描述，确保 `JSON.parse` 可以直接解析。
 
+14. 如果某个判断主要来自 `ruleFindings`，而不是 `changedFiles.patch` 的直接证据，风险等级最高只能为 `low` 或 `medium`，并且必须在 `evidence` 中说明“来源于规则预检测”。
+
+15. 不要对正则表达式、框架行为、API 行为做未验证推断；如果 `patch` 证据不足，请写“当前上下文不足，需要人工确认”。
+
+16. 如果 `contextPolicy.truncated` 为 `true`，且相关文件出现在 `contextPolicy.truncatedItems` 中，必须降低置信度，并优先输出到 `openQuestions` 或 `limitations`。
+
+17. `high` 风险必须同时满足：有明确 `patch` 证据、有明确影响路径、有较高置信度。
+
+18. `mainModules` 优先使用目录、文件路径或模块边界概括，例如 `lib/github.ts`、`app/api/pr`、`types`、`tests`，不要只写抽象业务名称。

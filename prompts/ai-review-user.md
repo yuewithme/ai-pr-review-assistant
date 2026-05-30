@@ -2,7 +2,6 @@
 
 你必须返回完全符合 `outputSchema` 的 JSON。
 
-```json
 {
   "task": "github_pr_review_analysis",
   "language": "zh-CN",
@@ -31,6 +30,12 @@
     "如果无法判断行号，position 写“未提供”",
     "confidence 必须是 0 到 1 的数字",
     "如果没有明显风险，risks 返回空数组",
+    "risk.evidenceSource 必须说明证据来源",
+    "如果风险需要人工确认，requiresHumanCheck 必须为 true",
+    "如果判断主要来自 ruleFindings，风险等级最高只能为 low 或 medium，并在 evidence 中说明来源于规则预检测",
+    "不要对正则表达式、框架行为、API 行为做未验证推断；证据不足时写当前上下文不足，需要人工确认",
+    "被截断文件的问题优先放入 openQuestions 或 limitations",
+    "mainModules 优先使用目录、文件路径或模块边界，不要只写抽象业务名称",
     "Review 建议要像真实 code review 评论",
     "JSON 字符串不要包含未转义的反斜杠；如果需要描述正则表达式，请优先用自然语言描述"
   ],
@@ -63,9 +68,11 @@
         "position": "string",
         "description": "string",
         "evidence": "string",
+        "evidenceSource": "patch | ruleFinding | metadata | context | mixed",
         "impact": "string",
         "suggestion": "string",
-        "confidence": 0.0
+        "confidence": 0.0,
+        "requiresHumanCheck": false
       }
     ],
     "reviewSuggestions": [
@@ -73,6 +80,20 @@
         "filePath": "string",
         "type": "bug-risk | test | refactor | security | requirement-confirmation | maintainability",
         "comment": "string"
+      }
+    ],
+    "openQuestions": [
+      {
+        "filePath": "string",
+        "question": "string",
+        "reason": "string"
+      }
+    ],
+    "limitations": [
+      {
+        "type": "truncated-context | insufficient-evidence | missing-line-number | other",
+        "filePath": "string",
+        "message": "string"
       }
     ],
     "testSuggestions": {
@@ -85,7 +106,5 @@
       "reason": "string"
     }
   },
-  "input": "{{AI_REVIEW_CONTEXT_JSON}}"
+  "input": {{AI_REVIEW_CONTEXT_JSON}}
 }
-```
-
