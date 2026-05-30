@@ -95,7 +95,6 @@ function buildFieldGuide() {
     "changedFiles.changes": "Total changed lines. Useful for spotting broad or high-review-cost changes.",
     contextFiles: "Limited repository context. Use only as background, not as changed code.",
     ruleFindings: "Rule precheck hints. They guide attention but are not final risk conclusions.",
-    contextPolicy: "Shows truncation and context budget decisions applied before AI analysis.",
   };
 }
 
@@ -105,21 +104,24 @@ function mapChangedFile(
   maxPatchCharsPerFile: number,
   budget: ContextBudget,
 ): AiReviewChangedFile {
+  const fileRuleFindings = ruleFindings.filter(
+    (finding) => finding.filePath === file.filename,
+  );
+
   return {
     filePath: file.filename,
     status: file.status,
     additions: file.additions,
     deletions: file.deletions,
     changes: file.changes,
-    patch: takeBudgetedText(
+    patch: takeBudgetedPatch(
       file.patch,
       maxPatchCharsPerFile,
       `changedFiles.${file.filename}.patch`,
+      fileRuleFindings,
       budget,
     ),
-    ruleFindingTypes: ruleFindings
-      .filter((finding) => finding.filePath === file.filename)
-      .map((finding) => finding.type),
+    ruleFindingTypes: fileRuleFindings.map((finding) => finding.type),
   };
 }
 
@@ -170,7 +172,7 @@ function takeBudgetedText(
   label: string,
   budget: ContextBudget,
 ): string {
-  const itemLimited = truncateText(text, perItemLimit, label, budget);
+  const itemLimited = takeSilentText(text, perItemLimit, label, budget);
   const remainingBudget = budget.maxTotalChars - budget.usedChars;
 
   if (itemLimited.length <= remainingBudget) {
@@ -178,22 +180,52 @@ function takeBudgetedText(
     return itemLimited;
   }
 
-  budget.truncated = true;
-  budget.truncatedItems.push(label);
+  markTruncated(label, budget);
 
   if (remainingBudget <= 0) {
-    return "[truncated: context budget exhausted]";
+    return "";
   }
 
-  const suffix = `\n...[truncated ${itemLimited.length - remainingBudget} chars: total context budget]`;
-  const visibleChars = Math.max(0, remainingBudget - suffix.length);
-  const result = `${itemLimited.slice(0, visibleChars)}${suffix}`;
+  const result = itemLimited.slice(0, remainingBudget);
   budget.usedChars += result.length;
 
   return result;
 }
 
-function truncateText(
+function takeBudgetedPatch(
+  text: string,
+  maxChars: number,
+  label: string,
+  ruleFindings: RuleFinding[],
+  budget: ContextBudget,
+): string {
+  const itemLimited = takePatchText(text, maxChars, label, ruleFindings, budget);
+  const remainingBudget = budget.maxTotalChars - budget.usedChars;
+
+  if (itemLimited.length <= remainingBudget) {
+    budget.usedChars += itemLimited.length;
+    return itemLimited;
+  }
+
+  markTruncated(label, budget);
+
+  if (remainingBudget <= 0) {
+    return "";
+  }
+
+  const result = takePatchText(
+    itemLimited,
+    remainingBudget,
+    label,
+    ruleFindings,
+    budget,
+  );
+  budget.usedChars += result.length;
+
+  return result;
+}
+
+function takeSilentText(
   text: string,
   maxChars: number,
   label: string,
@@ -203,9 +235,134 @@ function truncateText(
     return text;
   }
 
-  budget.truncated = true;
-  budget.truncatedItems.push(label);
+  markTruncated(label, budget);
 
-  return `${text.slice(0, maxChars)}\n...[truncated ${text.length - maxChars} chars: per-item limit]`;
+  return text.slice(0, maxChars);
 }
 
+function takePatchText(
+  patch: string,
+  maxChars: number,
+  label: string,
+  ruleFindings: RuleFinding[],
+  budget: ContextBudget,
+): string {
+  if (patch.length <= maxChars) {
+    return patch;
+  }
+
+  markTruncated(label, budget);
+
+  const hunks = splitPatchHunks(patch);
+
+  if (hunks.length <= 1) {
+    return patch.slice(0, maxChars);
+  }
+
+  const selectedHunks: string[] = [];
+  let usedChars = 0;
+
+  for (const hunk of scorePatchHunks(hunks, ruleFindings)) {
+    if (usedChars >= maxChars) {
+      break;
+    }
+
+    const separatorLength = selectedHunks.length > 0 ? 1 : 0;
+    const remaining = maxChars - usedChars - separatorLength;
+
+    if (remaining <= 0) {
+      break;
+    }
+
+    const nextHunk = hunk.length <= remaining ? hunk : hunk.slice(0, remaining);
+
+    selectedHunks.push(nextHunk);
+    usedChars += separatorLength + nextHunk.length;
+  }
+
+  return selectedHunks.join("\n");
+}
+
+function splitPatchHunks(patch: string): string[] {
+  const lines = patch.split("\n");
+  const hunks: string[] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith("@@ ") && current.length > 0) {
+      hunks.push(current.join("\n"));
+      current = [line];
+      continue;
+    }
+
+    current.push(line);
+  }
+
+  if (current.length > 0) {
+    hunks.push(current.join("\n"));
+  }
+
+  return hunks;
+}
+
+function scorePatchHunks(
+  hunks: string[],
+  ruleFindings: RuleFinding[],
+): string[] {
+  return hunks
+    .map((hunk, index) => ({
+      hunk,
+      index,
+      score: scorePatchHunk(hunk, ruleFindings),
+    }))
+    .sort((left, right) => {
+      const scoreDiff = right.score - left.score;
+
+      if (scoreDiff !== 0) {
+        return scoreDiff;
+      }
+
+      return left.index - right.index;
+    })
+    .map((item) => item.hunk);
+}
+
+function scorePatchHunk(hunk: string, ruleFindings: RuleFinding[]): number {
+  const lowerHunk = hunk.toLowerCase();
+  let score = 0;
+
+  if (/[+-]/.test(hunk)) {
+    score += 10;
+  }
+
+  for (const keyword of [
+    "auth",
+    "login",
+    "permission",
+    "token",
+    "middleware",
+    "secret",
+    "password",
+    "console.log",
+    "todo",
+    " any",
+  ]) {
+    if (lowerHunk.includes(keyword)) {
+      score += 20;
+    }
+  }
+
+  for (const finding of ruleFindings) {
+    score += scoreFinding(finding.level, finding.type);
+  }
+
+  return score;
+}
+
+function markTruncated(label: string, budget: ContextBudget): void {
+  budget.truncated = true;
+
+  if (!budget.truncatedItems.includes(label)) {
+    budget.truncatedItems.push(label);
+  }
+}

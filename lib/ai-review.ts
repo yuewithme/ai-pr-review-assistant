@@ -165,9 +165,6 @@ ${JSON.stringify(context.changedFiles, null, 2)}
 Field Guide:
 ${JSON.stringify(context.fieldGuide, null, 2)}
 
-Context Policy:
-${JSON.stringify(context.contextPolicy, null, 2)}
-
 Analyze this PR and return strict JSON only.`;
 }
 

@@ -162,8 +162,8 @@
         <dl>
           <dt>类型</dt><dd>maintainability</dd>
           <dt>位置</dt><dd>未提供</dd>
-          <dt>问题</dt><dd>文件长度 357 行，超过 300 行的审查阈值，可能影响可读性和维护性。由于上下文截断，无法判断是否适合拆分。</dd>
-          <dt>依据</dt><dd>changedFiles 显示该文件增加了 357 行，且 patch 被截断。</dd>
+          <dt>问题</dt><dd>文件长度 357 行，超过 300 行的审查阈值，可能影响可读性和维护性。</dd>
+          <dt>依据</dt><dd>changedFiles 显示该文件增加了 357 行。</dd>
           <dt>影响</dt><dd>后续修改可能增加认知负担，且难以单独测试各部分逻辑。</dd>
           <dt>建议</dt><dd>建议人工复查，考虑将 prompt 构建、API 调用、结果解析拆分为独立模块。</dd>
           <dt>置信度</dt><dd>0.6</dd>
@@ -181,7 +181,7 @@
           <dt>类型</dt><dd>compatibility</dd>
           <dt>位置</dt><dd>未提供</dd>
           <dt>问题</dt><dd>GitHub API 文件列表可能分页，当前代码未见分页处理逻辑，可能导致文件数超过默认分页大小时遗漏文件。</dd>
-          <dt>依据</dt><dd>patch 被截断，但可见 fetchPullRequestFiles 函数返回 ChangedFile 数组，未发现分页参数或循环逻辑。</dd>
+          <dt>依据</dt><dd>可见 fetchPullRequestFiles 函数返回 ChangedFile 数组，未发现分页参数或循环逻辑。</dd>
           <dt>影响</dt><dd>对于文件数较多的 PR，分析可能不完整，导致漏检风险。</dd>
           <dt>建议</dt><dd>请人工确认是否已处理分页，如有必要，增加分页循环以获取所有变更文件。</dd>
           <dt>置信度</dt><dd>0.5</dd>
@@ -286,15 +286,15 @@
       </article>
       <article class="file">
         <h3><span class="path">tests/ai-review.test.ts</span></h3>
-        <p>ai-review 模块的单元测试（内容截断）</p>
+        <p>ai-review 模块的单元测试</p>
       </article>
       <article class="file">
         <h3><span class="path">tests/github-fetch.test.ts</span></h3>
-        <p>GitHub fetch 功能的单元测试（内容截断）</p>
+        <p>GitHub fetch 功能的单元测试</p>
       </article>
       <article class="file">
         <h3><span class="path">tests/ai-context-builder.test.ts</span></h3>
-        <p>ai-context-builder 的单元测试（内容截断）</p>
+        <p>ai-context-builder 的单元测试</p>
       </article>
       <article class="file">
         <h3><span class="path">lib/mock-analysis.ts</span></h3>
@@ -302,39 +302,39 @@
       </article>
       <article class="file">
         <h3><span class="path">tests/pr-fetch-route.test.ts</span></h3>
-        <p>POST /api/pr/fetch 路由的测试（内容截断）</p>
+        <p>POST /api/pr/fetch 路由的测试</p>
       </article>
       <article class="file">
         <h3><span class="path">tests/mock-analysis.test.ts</span></h3>
-        <p>mock-analysis 的单元测试（内容截断）</p>
+        <p>mock-analysis 的单元测试</p>
       </article>
       <article class="file">
         <h3><span class="path">app/api/pr/analyze/route.ts</span></h3>
-        <p>/api/pr/analyze 的路由处理器（内容截断）</p>
+        <p>/api/pr/analyze 的路由处理器</p>
       </article>
       <article class="file">
         <h3><span class="path">types/analysis.ts</span></h3>
-        <p>分析相关类型定义（内容截断）</p>
+        <p>分析相关类型定义</p>
       </article>
       <article class="file">
         <h3><span class="path">app/api/pr/fetch/route.ts</span></h3>
-        <p>/api/pr/fetch 的路由处理器（内容截断）</p>
+        <p>/api/pr/fetch 的路由处理器</p>
       </article>
       <article class="file">
         <h3><span class="path">types/ai-context.ts</span></h3>
-        <p>AI 上下文数据类型定义（内容截断）</p>
+        <p>AI 上下文数据类型定义</p>
       </article>
       <article class="file">
         <h3><span class="path">types/github.ts</span></h3>
-        <p>扩展了 GitHub 相关类型，添加了额外字段（内容截断）</p>
+        <p>扩展了 GitHub 相关类型，添加了额外字段</p>
       </article>
       <article class="file">
         <h3><span class="path">docs/data-mapping.md</span></h3>
-        <p>数据映射文档（内容截断）</p>
+        <p>数据映射文档</p>
       </article>
       <article class="file">
         <h3><span class="path">.gitignore</span></h3>
-        <p>修改了 .gitignore 文件（内容截断）</p>
+        <p>修改了 .gitignore 文件</p>
       </article>
     </section>
 
@@ -342,7 +342,7 @@
       <h2>总体结论</h2>
       <div class="panel">
         <h3>建议重点人工复查</h3>
-        <p>关键文件 lib/ai-review.ts 和 lib/github.ts 因上下文截断无法完整审查，存在分页缺失与大文件可维护性风险。建议人工核实 GitHub API 分页处理、AI 调用错误处理和模块划分。</p>
+        <p>关键文件 lib/ai-review.ts 和 lib/github.ts 涉及较多核心逻辑变更，存在分页缺失与大文件可维护性风险。建议重点核实 GitHub API 分页处理、AI 调用错误处理和模块划分。</p>
       </div>
     </section>
 

@@ -182,5 +182,5 @@ test("analyzePullRequest truncates long patches before sending to AI", async () 
   });
 
   assert.ok(requestBody.length < 15_000);
-  assert.match(requestBody, /truncated/);
+  assert.doesNotMatch(requestBody, /truncated|内容截断|Context Policy/i);
 });
