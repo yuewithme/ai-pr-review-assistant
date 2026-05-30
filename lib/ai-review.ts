@@ -1,3 +1,4 @@
+import { buildAiReviewContext } from "./ai-context-builder.ts";
 import { mockAnalysisResult } from "./mock-analysis.ts";
 import type {
   AnalysisRisk,
@@ -7,12 +8,11 @@ import type {
   RuleFindingLevel,
   RuleFindingType,
 } from "../types/analysis.ts";
+import type { AiReviewContext } from "../types/ai-context.ts";
 import type { ChangedFile, ContextFile, FetchedPrData, PrInfo } from "../types/github.ts";
 
 const DEFAULT_AI_MODEL = "gpt-4o-mini";
 const DEFAULT_AI_BASE_URL = "https://api.openai.com/v1";
-const MAX_PATCH_CHARS_PER_FILE = 4_000;
-const MAX_CONTEXT_CHARS_PER_FILE = 2_000;
 
 const SYSTEM_PROMPT = `You are an experienced senior code reviewer. Analyze a GitHub Pull Request using only the provided PR metadata, changed files, diff patches, limited context files, and rule precheck findings.
 
@@ -98,7 +98,8 @@ export async function analyzePullRequest(
   }
 
   try {
-    const aiContent = await callAiApi(input, apiKey);
+    const aiContext = buildAiReviewContext(input);
+    const aiContent = await callAiApi(aiContext, apiKey);
     const parsed = parseStrictJson(aiContent);
 
     return normalizeAiResult(parsed, input);
@@ -108,7 +109,7 @@ export async function analyzePullRequest(
 }
 
 async function callAiApi(
-  input: AnalyzePullRequestInput,
+  context: AiReviewContext,
   apiKey: string,
 ): Promise<string> {
   const model = process.env.OPENAI_MODEL ?? DEFAULT_AI_MODEL;
@@ -130,7 +131,7 @@ async function callAiApi(
         },
         {
           role: "user",
-          content: buildUserPrompt(input),
+          content: buildUserPrompt(context),
         },
       ],
     }),
@@ -150,42 +151,26 @@ async function callAiApi(
   return content;
 }
 
-function buildUserPrompt(input: AnalyzePullRequestInput): string {
+function buildUserPrompt(context: AiReviewContext): string {
   return `PR Info:
-${JSON.stringify(input.prInfo, null, 2)}
+${JSON.stringify(context.prInfo, null, 2)}
 
 Rule Precheck Findings:
-${JSON.stringify(input.ruleFindings, null, 2)}
+${JSON.stringify(context.ruleFindings, null, 2)}
 
 Limited Context Files:
-${JSON.stringify(truncateContextFiles(input.contextFiles), null, 2)}
+${JSON.stringify(context.contextFiles, null, 2)}
 
 Changed Files And Patches:
-${JSON.stringify(truncateChangedFiles(input.changedFiles), null, 2)}
+${JSON.stringify(context.changedFiles, null, 2)}
+
+Field Guide:
+${JSON.stringify(context.fieldGuide, null, 2)}
+
+Context Policy:
+${JSON.stringify(context.contextPolicy, null, 2)}
 
 Analyze this PR and return strict JSON only.`;
-}
-
-function truncateChangedFiles(files: ChangedFile[]): ChangedFile[] {
-  return files.map((file) => ({
-    ...file,
-    patch: truncateText(file.patch, MAX_PATCH_CHARS_PER_FILE),
-  }));
-}
-
-function truncateContextFiles(files: ContextFile[]): ContextFile[] {
-  return files.map((file) => ({
-    ...file,
-    content: truncateText(file.content, MAX_CONTEXT_CHARS_PER_FILE),
-  }));
-}
-
-function truncateText(text: string, maxChars: number): string {
-  if (text.length <= maxChars) {
-    return text;
-  }
-
-  return `${text.slice(0, maxChars)}\n...[truncated ${text.length - maxChars} chars]`;
 }
 
 function parseStrictJson(content: string): AiJsonResponse {
@@ -372,4 +357,3 @@ function isRuleFindingType(value: unknown): value is RuleFindingType {
 function isRuleFindingLevel(value: unknown): value is RuleFindingLevel {
   return value === "low" || value === "medium" || value === "high";
 }
-
