@@ -26,6 +26,7 @@ export type AnalysisRisk = {
   filePath: string;
   message: string;
   suggestion: string;
+  confidence: number;
 };
 
 export type ReviewSuggestion = {
@@ -52,4 +53,3 @@ export type AnalysisResult = {
   fileSummaries: FileSummary[];
   ruleFindings: RuleFinding[];
 };
-

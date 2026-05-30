@@ -57,5 +57,5 @@ test("mockAnalysisResult returns a stable analysis result from real changed file
   });
   assert.equal(result.risks.length, 1);
   assert.equal(result.risks[0].type, "permission");
+  assert.equal(result.risks[0].confidence, 0.6);
 });
-

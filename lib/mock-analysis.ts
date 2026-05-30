@@ -45,6 +45,7 @@ function createRiskFromRuleFinding(finding: RuleFinding): AnalysisRisk {
     message: `Mock risk based on rule precheck: ${finding.message}`,
     suggestion:
       "Use this rule finding as a review prompt and verify the actual code impact before treating it as a confirmed risk.",
+    confidence: 0.6,
   };
 }
 
@@ -84,4 +85,3 @@ function createAnalysisId(seed: string): string {
 
   return `mock_${hash.toString(16)}`;
 }
-

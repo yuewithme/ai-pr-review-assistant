@@ -1,3 +1,4 @@
+import { analyzePullRequest } from "../../../../lib/ai-review.ts";
 import { fetchPrData, GitHubApiError } from "../../../../lib/github.ts";
 import { mockAnalysisResult } from "../../../../lib/mock-analysis.ts";
 import { parseGitHubPrUrl, PrUrlParseError } from "../../../../lib/parser.ts";
@@ -25,9 +26,21 @@ export async function POST(request: Request): Promise<Response> {
     const parsedPrUrl = parseGitHubPrUrl(body.prUrl);
     const prData = await fetchPrData(parsedPrUrl);
     const ruleFindings = checkRules(prData.files);
-    const analysis = mockAnalysisResult(prData, ruleFindings);
+    const analysisDetails = await analyzePullRequest({
+      prInfo: prData.pr,
+      changedFiles: prData.files,
+      contextFiles: prData.contextFiles,
+      ruleFindings,
+    });
+    const fallbackMetadata = mockAnalysisResult(prData, ruleFindings);
 
-    return successResponse(analysis);
+    return successResponse({
+      analysisId: fallbackMetadata.analysisId,
+      status: fallbackMetadata.status,
+      prInfo: prData.pr,
+      ...analysisDetails,
+      ruleFindings,
+    });
   } catch (error) {
     if (error instanceof PrUrlParseError) {
       return errorResponse(error.code, error.message);
@@ -40,4 +53,3 @@ export async function POST(request: Request): Promise<Response> {
     return errorResponse("INTERNAL_ERROR", "Failed to analyze PR.", 500);
   }
 }
-
