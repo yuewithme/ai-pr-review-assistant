@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PR Review 报告 - Add GitHub PR fetch API</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #17202a;
+      --muted: #667085;
+      --line: #d9dee7;
+      --accent: #1f7a5c;
+      --accent-soft: #e6f4ef;
+      --red: #b42318;
+      --red-soft: #fee4e2;
+      --amber: #b54708;
+      --amber-soft: #fef0c7;
+      --blue: #175cd3;
+      --blue-soft: #dbeafe;
+      --code: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; }
+    .page { max-width: 1120px; margin: 0 auto; padding: 32px 20px 56px; }
+    .hero { padding: 28px 0 20px; border-bottom: 1px solid var(--line); }
+    .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .02em; }
+    h1 { margin: 8px 0 10px; font-size: 34px; line-height: 1.2; }
+    h2 { margin: 0 0 16px; font-size: 22px; }
+    h3 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 860px; font-size: 16px; }
+    .decision { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 8px 12px; border-radius: 6px; background: var(--amber-soft); color: var(--amber); font-weight: 700; }
+    section { margin-top: 28px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .metric, .panel, .risk, .comment, .file { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .metric { padding: 14px 16px; min-height: 108px; }
+    .metric span { display: block; color: var(--muted); font-size: 12px; }
+    .metric strong { display: block; margin-top: 5px; font-size: 20px; line-height: 1.25; word-break: break-word; }
+    .metric p { margin-top: 6px; color: var(--muted); font-size: 13px; }
+    .panel { padding: 18px; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 5px 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip { padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #344054; font-size: 12px; }
+    .risk-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .risk-count { padding: 14px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+    .risk-count strong { display: block; font-size: 26px; }
+    .risk-high { background: var(--red-soft); color: var(--red); }
+    .risk-medium { background: var(--amber-soft); color: var(--amber); }
+    .risk-low { background: var(--blue-soft); color: var(--blue); }
+    .risk { margin-top: 12px; padding: 16px; }
+    .risk header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .path { display: inline-block; margin-top: 6px; padding: 3px 7px; border-radius: 5px; background: var(--code); color: #344054; font-family: Consolas, "SFMono-Regular", monospace; font-size: 12px; word-break: break-all; }
+    .risk dl { display: grid; grid-template-columns: 88px 1fr; gap: 8px 12px; margin: 14px 0 0; }
+    .risk dt { color: var(--muted); }
+    .risk dd { margin: 0; }
+    .comment, .file { padding: 14px 16px; margin-top: 10px; }
+    .comment p, .file p { margin-top: 6px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .footer { margin-top: 30px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 760px) {
+      .grid, .risk-bar, .two-col { grid-template-columns: 1fr; }
+      h1 { font-size: 26px; }
+      .risk header { display: block; }
+      .badge { margin-top: 10px; }
+      .risk dl { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow">AI PR Review 报告</div>
+      <h1>Add GitHub PR fetch API</h1>
+      <p class="subtitle">该 PR 添加了 GitHub PR 获取 API、AI 驱动的 PR Review 分析管道、规则预检查功能及相关路由，并提供了大量单元测试。</p>
+      <div class="decision">建议重点人工复查</div>
+    </header>
+
+    <section>
+      <h2>PR 概览</h2>
+      <div class="grid">
+        <article class="metric"><span>作者</span><strong>yuewithme</strong><p>PR 提交者</p></article>
+        <article class="metric"><span>源分支</span><strong>feature/github-pr-fetch-api</strong><p>本次变更来源</p></article>
+        <article class="metric"><span>目标分支</span><strong>feature/pr-url-parse-api</strong><p>本次变更合入目标</p></article>
+        <article class="metric"><span>修改文件</span><strong>21</strong><p>Changed files</p></article>
+        <article class="metric"><span>新增行数</span><strong>2199</strong><p>Additions</p></article>
+        <article class="metric"><span>删除行数</span><strong>1</strong><p>Deletions</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>变更总结</h2>
+      <div class="panel">
+        <h3>整体说明</h3>
+        <p>该 PR 添加了 GitHub PR 获取 API、AI 驱动的 PR Review 分析管道、规则预检查功能及相关路由，并提供了大量单元测试。</p>
+        <h3 style="margin-top:16px;">主要变更点</h3>
+        <ul><li>添加 GitHub REST API 客户端，支持获取 PR 元数据和变更文件</li><li>实现 AI 驱动的 PR Review 分析管道，包括上下文构建、DeepSeek API 调用和结果解析</li><li>添加规则预检查功能，自动检测安全、依赖、大文件变更等</li><li>添加 POST /api/pr/fetch 和 POST /api/pr/analyze 路由</li><li>为所有模块添加了全面的单元测试</li></ul>
+        <h3 style="margin-top:16px;">主要涉及模块</h3>
+        <div class="chips"><span class="chip">GitHub API 客户端</span><span class="chip">AI 分析管道</span><span class="chip">规则检查器</span><span class="chip">路由</span><span class="chip">类型定义</span><span class="chip">测试套件</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>风险概览</h2>
+      <div class="risk-bar">
+        <div class="risk-count risk-high"><strong>0</strong><span>高风险</span></div>
+        <div class="risk-count risk-medium"><strong>3</strong><span>中风险</span></div>
+        <div class="risk-count risk-low"><strong>2</strong><span>低风险</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>风险详情</h2>
+      
+      <article class="risk">
+        <header>
+          <div>
+            <h3>环境变量示例文件包含 DEEPSEEK_API_KEY 占位符</h3>
+            <span class="path">.env.example</span>
+          </div>
+          <span class="badge risk-low">低风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>security</dd>
+          <dt>位置</dt><dd>未提供</dd>
+          <dt>问题</dt><dd>环境变量示例文件包含 DEEPSEEK_API_KEY 占位符，需确保真实密钥不会提交到版本控制。</dd>
+          <dt>依据</dt><dd>文件内容仅有一行：DEEPSEEK_API_KEY=your_deepseek_api_key</dd>
+          <dt>影响</dt><dd>如果误将真实密钥写入此文件并提交，可能导致密钥泄露。</dd>
+          <dt>建议</dt><dd>确认 .env.example 已在 .gitignore 中且不会包含实际凭据，敏感密钥应存储在安全保管库。</dd>
+          <dt>置信度</dt><dd>0.4</dd>
+        </dl>
+      </article>
+      <article class="risk">
+        <header>
+          <div>
+            <h3>规则检查中的 any 检测正则表达式可能误匹配单词内包含 any 的字符串</h3>
+            <span class="path">lib/rule-checker.ts</span>
+          </div>
+          <span class="badge risk-medium">中风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>maintainability</dd>
+          <dt>位置</dt><dd>未提供</dd>
+          <dt>问题</dt><dd>规则检查中的 any 检测正则表达式可能误匹配单词内包含 any 的字符串，例如 company，导致误报。</dd>
+          <dt>依据</dt><dd>代码中使用单词边界匹配 any 来检测 any 类型。</dd>
+          <dt>影响</dt><dd>可能产生不准确的 type-safety 规则预检结果，误导后续 AI 分析。</dd>
+          <dt>建议</dt><dd>使用更精确的匹配逻辑，例如只匹配 TypeScript 类型声明中的 any，或结合 AST 分析。</dd>
+          <dt>置信度</dt><dd>0.7</dd>
+        </dl>
+      </article>
+      <article class="risk">
+        <header>
+          <div>
+            <h3>文件长度 357 行</h3>
+            <span class="path">lib/ai-review.ts</span>
+          </div>
+          <span class="badge risk-medium">中风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>maintainability</dd>
+          <dt>位置</dt><dd>未提供</dd>
+          <dt>问题</dt><dd>文件长度 357 行，超过 300 行的审查阈值，可能影响可读性和维护性。由于上下文截断，无法判断是否适合拆分。</dd>
+          <dt>依据</dt><dd>changedFiles 显示该文件增加了 357 行，且 patch 被截断。</dd>
+          <dt>影响</dt><dd>后续修改可能增加认知负担，且难以单独测试各部分逻辑。</dd>
+          <dt>建议</dt><dd>建议人工复查，考虑将 prompt 构建、API 调用、结果解析拆分为独立模块。</dd>
+          <dt>置信度</dt><dd>0.6</dd>
+        </dl>
+      </article>
+      <article class="risk">
+        <header>
+          <div>
+            <h3>GitHub API 文件列表可能分页</h3>
+            <span class="path">lib/github.ts</span>
+          </div>
+          <span class="badge risk-medium">中风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>compatibility</dd>
+          <dt>位置</dt><dd>未提供</dd>
+          <dt>问题</dt><dd>GitHub API 文件列表可能分页，当前代码未见分页处理逻辑，可能导致文件数超过默认分页大小时遗漏文件。</dd>
+          <dt>依据</dt><dd>patch 被截断，但可见 fetchPullRequestFiles 函数返回 ChangedFile 数组，未发现分页参数或循环逻辑。</dd>
+          <dt>影响</dt><dd>对于文件数较多的 PR，分析可能不完整，导致漏检风险。</dd>
+          <dt>建议</dt><dd>请人工确认是否已处理分页，如有必要，增加分页循环以获取所有变更文件。</dd>
+          <dt>置信度</dt><dd>0.5</dd>
+        </dl>
+      </article>
+      <article class="risk">
+        <header>
+          <div>
+            <h3>测试中使用 globalThis.fetch 直接 mock</h3>
+            <span class="path">tests/pr-analyze-route.test.ts</span>
+          </div>
+          <span class="badge risk-low">低风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>test-missing</dd>
+          <dt>位置</dt><dd>未提供</dd>
+          <dt>问题</dt><dd>测试中使用 globalThis.fetch 直接 mock，可能污染全局状态，影响其他测试的执行。</dd>
+          <dt>依据</dt><dd>测试代码直接给 globalThis.fetch 赋值箭头函数，未在测试后清理。</dd>
+          <dt>影响</dt><dd>可能导致其他测试因 mock 残留而意外失败或成功。</dd>
+          <dt>建议</dt><dd>建议使用 afterEach 钩子恢复原始 fetch，或采用模块级 mock、依赖注入方式避免全局污染。</dd>
+          <dt>置信度</dt><dd>0.4</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section>
+      <h2>Review 建议</h2>
+      
+      <article class="comment">
+        <h3>maintainability</h3>
+        <span class="path">lib/rule-checker.ts</span>
+        <p>建议改进检测 TypeScript any 的正则表达式，避免单词边界误判。可以只匹配类型声明场景中的 any，或直接结合 TypeScript AST 做更准确的检测。</p>
+      </article>
+      <article class="comment">
+        <h3>requirement-confirmation</h3>
+        <span class="path">lib/github.ts</span>
+        <p>请确认是否已处理 GitHub API 的分页。如果文件数超过默认每页数量，需要循环请求并合并结果，否则会丢失文件。</p>
+      </article>
+      <article class="comment">
+        <h3>test</h3>
+        <span class="path">tests/pr-analyze-route.test.ts</span>
+        <p>建议在测试结束后恢复原始 fetch，避免 globalThis.fetch 泄漏影响其他测试。</p>
+      </article>
+      <article class="comment">
+        <h3>refactor</h3>
+        <span class="path">lib/ai-review.ts</span>
+        <p>考虑将大型 prompt 模板和 JSON 解析逻辑提取到独立模块，以提高可读性和可测试性。</p>
+      </article>
+    </section>
+
+    <section>
+      <h2>测试建议</h2>
+      <div class="two-col">
+        <div class="panel">
+          <h3>建议补充场景</h3>
+          <ul><li>验证 GitHub API 返回多页文件列表时，能正确获取所有变更文件</li><li>模拟 DEEPSEEK_API_KEY 未设置时，回退到 mock 分析</li><li>模拟 AI API 调用超时或返回非预期 JSON，验证错误处理与回退逻辑</li></ul>
+        </div>
+        <div class="panel">
+          <h3>重点边界条件</h3>
+          <ul><li>PR 包含超过默认分页大小的文件数量，触发 GitHub API 分页</li><li>文件补丁包含多字节字符或特殊正则符号，确保解析不异常</li><li>规则检查器自身被检测出 console.log 或 any，验证不会递归生成无限发现</li></ul>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:12px;">
+        <strong>测试缺失风险：</strong>存在
+      </div>
+    </section>
+
+    <section>
+      <h2>文件级变更摘要</h2>
+      
+      <article class="file">
+        <h3><span class="path">docs/pr-2-real-ai-test-report.md</span></h3>
+        <p>记录真实 AI 测试报告，包含解析结果、规则预检和 AI 分析输出</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">lib/rule-checker.ts</span></h3>
+        <p>实现规则检查逻辑，通过文件路径和补丁内容正则扫描，预检权限、安全、依赖等风险</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/rule-checker.test.ts</span></h3>
+        <p>测试 rule-checker 的各种规则触发场景和消息格式</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">.env.example</span></h3>
+        <p>环境变量示例文件，包含 DeepSeek API 密钥占位符</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">lib/ai-review.ts</span></h3>
+        <p>核心 AI 分析逻辑，构建 prompt、调用 DeepSeek API、解析结果并回退到 mock 分析</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/pr-analyze-route.test.ts</span></h3>
+        <p>测试 POST /api/pr/analyze 路由的 mock 和错误场景</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">lib/github.ts</span></h3>
+        <p>GitHub API 客户端，负责获取 PR 详情、文件列表和有限上下文文件</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">lib/ai-context-builder.ts</span></h3>
+        <p>构建提供给 AI 的结构化上下文数据</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/ai-review.test.ts</span></h3>
+        <p>ai-review 模块的单元测试（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/github-fetch.test.ts</span></h3>
+        <p>GitHub fetch 功能的单元测试（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/ai-context-builder.test.ts</span></h3>
+        <p>ai-context-builder 的单元测试（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">lib/mock-analysis.ts</span></h3>
+        <p>提供模拟分析结果，用于无 API 密钥时的回退方案</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/pr-fetch-route.test.ts</span></h3>
+        <p>POST /api/pr/fetch 路由的测试（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">tests/mock-analysis.test.ts</span></h3>
+        <p>mock-analysis 的单元测试（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">app/api/pr/analyze/route.ts</span></h3>
+        <p>/api/pr/analyze 的路由处理器（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">types/analysis.ts</span></h3>
+        <p>分析相关类型定义（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">app/api/pr/fetch/route.ts</span></h3>
+        <p>/api/pr/fetch 的路由处理器（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">types/ai-context.ts</span></h3>
+        <p>AI 上下文数据类型定义（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">types/github.ts</span></h3>
+        <p>扩展了 GitHub 相关类型，添加了额外字段（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">docs/data-mapping.md</span></h3>
+        <p>数据映射文档（内容截断）</p>
+      </article>
+      <article class="file">
+        <h3><span class="path">.gitignore</span></h3>
+        <p>修改了 .gitignore 文件（内容截断）</p>
+      </article>
+    </section>
+
+    <section>
+      <h2>总体结论</h2>
+      <div class="panel">
+        <h3>建议重点人工复查</h3>
+        <p>关键文件 lib/ai-review.ts 和 lib/github.ts 因上下文截断无法完整审查，存在分页缺失与大文件可维护性风险。建议人工核实 GitHub API 分页处理、AI 调用错误处理和模块划分。</p>
+      </div>
+    </section>
+
+    <p class="footer">本 HTML 由真实 AI 分析 JSON 测试生成，仅用于验证展示层结构。</p>
+  </main>
+</body>
+</html>
