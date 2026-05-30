@@ -34,7 +34,7 @@
     .decision { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 8px 12px; border-radius: 6px; background: var(--amber-soft); color: var(--amber); font-weight: 700; }
     section { margin-top: 28px; }
     .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .metric, .panel, .risk, .comment, .file { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .metric, .panel, .risk, .comment { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
     .metric { padding: 14px 16px; min-height: 108px; }
     .metric span { display: block; color: var(--muted); font-size: 12px; }
     .metric strong { display: block; margin-top: 5px; font-size: 20px; line-height: 1.25; word-break: break-word; }
@@ -57,8 +57,13 @@
     .risk dl { display: grid; grid-template-columns: 88px 1fr; gap: 8px 12px; margin: 14px 0 0; }
     .risk dt { color: var(--muted); }
     .risk dd { margin: 0; }
-    .comment, .file { padding: 14px 16px; margin-top: 10px; }
-    .comment p, .file p { margin-top: 6px; }
+    .comment { padding: 14px 16px; margin-top: 10px; }
+    .comment p { margin-top: 6px; }
+    .file-list { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .file-row { display: grid; grid-template-columns: minmax(220px, 32%) 1fr; gap: 14px; align-items: start; padding: 10px 14px; border-top: 1px solid var(--line); }
+    .file-row:first-child { border-top: 0; }
+    .file-row .path { margin-top: 0; max-width: 100%; }
+    .file-row p { margin: 2px 0 0; color: #344054; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .footer { margin-top: 30px; color: var(--muted); font-size: 12px; }
     @media (max-width: 760px) {
@@ -67,6 +72,7 @@
       .risk header { display: block; }
       .badge { margin-top: 10px; }
       .risk dl { grid-template-columns: 1fr; }
+      .file-row { grid-template-columns: 1fr; gap: 6px; }
     }
   </style>
 </head>
@@ -251,91 +257,29 @@
 
     <section>
       <h2>文件级变更摘要</h2>
-      
-      <article class="file">
-        <h3><span class="path">docs/pr-2-real-ai-test-report.md</span></h3>
-        <p>记录真实 AI 测试报告，包含解析结果、规则预检和 AI 分析输出</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">lib/rule-checker.ts</span></h3>
-        <p>实现规则检查逻辑，通过文件路径和补丁内容正则扫描，预检权限、安全、依赖等风险</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/rule-checker.test.ts</span></h3>
-        <p>测试 rule-checker 的各种规则触发场景和消息格式</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">.env.example</span></h3>
-        <p>环境变量示例文件，包含 DeepSeek API 密钥占位符</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">lib/ai-review.ts</span></h3>
-        <p>核心 AI 分析逻辑，构建 prompt、调用 DeepSeek API、解析结果并回退到 mock 分析</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/pr-analyze-route.test.ts</span></h3>
-        <p>测试 POST /api/pr/analyze 路由的 mock 和错误场景</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">lib/github.ts</span></h3>
-        <p>GitHub API 客户端，负责获取 PR 详情、文件列表和有限上下文文件</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">lib/ai-context-builder.ts</span></h3>
-        <p>构建提供给 AI 的结构化上下文数据</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/ai-review.test.ts</span></h3>
-        <p>ai-review 模块的单元测试</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/github-fetch.test.ts</span></h3>
-        <p>GitHub fetch 功能的单元测试</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/ai-context-builder.test.ts</span></h3>
-        <p>ai-context-builder 的单元测试</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">lib/mock-analysis.ts</span></h3>
-        <p>提供模拟分析结果，用于无 API 密钥时的回退方案</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/pr-fetch-route.test.ts</span></h3>
-        <p>POST /api/pr/fetch 路由的测试</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">tests/mock-analysis.test.ts</span></h3>
-        <p>mock-analysis 的单元测试</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">app/api/pr/analyze/route.ts</span></h3>
-        <p>/api/pr/analyze 的路由处理器</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">types/analysis.ts</span></h3>
-        <p>分析相关类型定义</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">app/api/pr/fetch/route.ts</span></h3>
-        <p>/api/pr/fetch 的路由处理器</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">types/ai-context.ts</span></h3>
-        <p>AI 上下文数据类型定义</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">types/github.ts</span></h3>
-        <p>扩展了 GitHub 相关类型，添加了额外字段</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">docs/data-mapping.md</span></h3>
-        <p>数据映射文档</p>
-      </article>
-      <article class="file">
-        <h3><span class="path">.gitignore</span></h3>
-        <p>修改了 .gitignore 文件</p>
-      </article>
+      <div class="file-list">
+        <div class="file-row"><span class="path">docs/pr-2-real-ai-test-report.md</span><p>记录真实 AI 测试报告，包含解析结果、规则预检和 AI 分析输出</p></div>
+        <div class="file-row"><span class="path">lib/rule-checker.ts</span><p>实现规则检查逻辑，通过文件路径和补丁内容正则扫描，预检权限、安全、依赖等风险</p></div>
+        <div class="file-row"><span class="path">tests/rule-checker.test.ts</span><p>测试 rule-checker 的各种规则触发场景和消息格式</p></div>
+        <div class="file-row"><span class="path">.env.example</span><p>环境变量示例文件，包含 DeepSeek API 密钥占位符</p></div>
+        <div class="file-row"><span class="path">lib/ai-review.ts</span><p>核心 AI 分析逻辑，构建 prompt、调用 DeepSeek API、解析结果并回退到 mock 分析</p></div>
+        <div class="file-row"><span class="path">tests/pr-analyze-route.test.ts</span><p>测试 POST /api/pr/analyze 路由的 mock 和错误场景</p></div>
+        <div class="file-row"><span class="path">lib/github.ts</span><p>GitHub API 客户端，负责获取 PR 详情、文件列表和有限上下文文件</p></div>
+        <div class="file-row"><span class="path">lib/ai-context-builder.ts</span><p>构建提供给 AI 的结构化上下文数据</p></div>
+        <div class="file-row"><span class="path">tests/ai-review.test.ts</span><p>ai-review 模块的单元测试</p></div>
+        <div class="file-row"><span class="path">tests/github-fetch.test.ts</span><p>GitHub fetch 功能的单元测试</p></div>
+        <div class="file-row"><span class="path">tests/ai-context-builder.test.ts</span><p>ai-context-builder 的单元测试</p></div>
+        <div class="file-row"><span class="path">lib/mock-analysis.ts</span><p>提供模拟分析结果，用于无 API 密钥时的回退方案</p></div>
+        <div class="file-row"><span class="path">tests/pr-fetch-route.test.ts</span><p>POST /api/pr/fetch 路由的测试</p></div>
+        <div class="file-row"><span class="path">tests/mock-analysis.test.ts</span><p>mock-analysis 的单元测试</p></div>
+        <div class="file-row"><span class="path">app/api/pr/analyze/route.ts</span><p>/api/pr/analyze 的路由处理器</p></div>
+        <div class="file-row"><span class="path">types/analysis.ts</span><p>分析相关类型定义</p></div>
+        <div class="file-row"><span class="path">app/api/pr/fetch/route.ts</span><p>/api/pr/fetch 的路由处理器</p></div>
+        <div class="file-row"><span class="path">types/ai-context.ts</span><p>AI 上下文数据类型定义</p></div>
+        <div class="file-row"><span class="path">types/github.ts</span><p>扩展了 GitHub 相关类型，添加了额外字段</p></div>
+        <div class="file-row"><span class="path">docs/data-mapping.md</span><p>数据映射文档</p></div>
+        <div class="file-row"><span class="path">.gitignore</span><p>修改了 .gitignore 文件</p></div>
+      </div>
     </section>
 
     <section>
