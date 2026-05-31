@@ -103,7 +103,9 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
   assert.equal(result.risks[0].confidence, 0.82);
   assert.equal(result.risks[0].filePath, "src/auth/middleware.ts");
   assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
-  assert.match(requestBody, /Return strict JSON only/);
+  assert.match(requestBody, /只返回严格 JSON/);
+  assert.match(requestBody, /所有解释性内容必须使用中文/);
+  assert.match(requestBody, /不要原样照抄成风险描述/);
   assert.match(requestBody, /deepseek-v4-flash/);
 });
 
@@ -125,8 +127,10 @@ test("analyzePullRequest falls back when AI JSON cannot be parsed", async () => 
     ruleFindings,
   });
 
-  assert.match(result.summary, /Mock analysis reviewed/);
+  assert.match(result.summary, /模拟分析已覆盖/);
   assert.equal(result.risks[0].confidence, 0.6);
+  assert.match(result.risks[0].message, /规则预检测/);
+  assert.match(result.risks[0].suggestion, /审查线索/);
 });
 
 test("analyzePullRequest truncates long patches before sending to AI", async () => {
@@ -182,5 +186,5 @@ test("analyzePullRequest truncates long patches before sending to AI", async () 
   });
 
   assert.ok(requestBody.length < 15_000);
-  assert.match(requestBody, /truncated/);
+  assert.doesNotMatch(requestBody, /truncated|内容截断|Context Policy/i);
 });

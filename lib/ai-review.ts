@@ -14,12 +14,12 @@ import type { ChangedFile, ContextFile, FetchedPrData, PrInfo } from "../types/g
 const DEEPSEEK_MODEL = "deepseek-v4-flash";
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
-const SYSTEM_PROMPT = `You are an experienced senior code reviewer. Analyze a GitHub Pull Request using only the provided PR metadata, changed files, diff patches, limited context files, and rule precheck findings.
+const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供的 PR 元数据、变更文件、diff patch、有限上下文文件和规则预检测结果分析 GitHub Pull Request。
 
-Return strict JSON only. Do not wrap the JSON in markdown. Do not include explanations outside JSON.
+只返回严格 JSON。不要使用 markdown 代码块包裹 JSON。不要输出 JSON 以外的解释。
 
-Rules:
-1. The output must match this JSON shape exactly:
+规则：
+1. 输出必须严格符合以下 JSON 结构：
 {
   "summary": "string",
   "risks": [
@@ -50,14 +50,17 @@ Rules:
   ]
 }
 
-2. Every risk must be tied to a concrete filePath from the changed files.
-3. Do not output a high risk unless the diff or rule finding provides clear code evidence.
-4. Every risk must include confidence from 0 to 1.
-5. Review suggestions should read like real code review comments: specific, actionable, and tied to the changed code.
-6. Rule precheck findings are hints for analysis, not final conclusions.
-7. If evidence is weak, prefer medium or low risk, or ask a review-style suggestion instead of claiming a risk.
-8. File summaries must be generated from the changed files.
-9. Use concise language.`;
+2. 每条风险都必须绑定 changed files 中真实存在的 filePath。
+3. 除非 diff 或规则预检测结果提供明确代码依据，否则不要输出 high 风险。
+4. 每条风险都必须包含 0 到 1 之间的 confidence。
+5. reviewSuggestions 要像真实 code review 评论：具体、可执行，并且和变更代码相关。
+6. rule precheck findings 只是分析线索，不是最终风险结论。
+7. 如果证据较弱，优先输出 medium 或 low 风险；也可以用 review 建议提出人工确认，不要强行断言风险。
+8. fileSummaries 必须基于 changed files 生成。
+9. 除以下内容外，所有可见解释性文本必须使用中文：文件路径、代码标识符、函数名、变量名、包名、分支名、PR 标题、risk type 枚举值、status 枚举值、TypeScript、GitHub、API、JSON、diff、patch、token 等技术名词。
+10. 如果输入中的 ruleFindings、patch 注释或上下文字段是英文，不要原样照抄成风险描述；请在保留必要技术名词的前提下转写为自然中文。
+11. summary、risk.message、risk.suggestion、reviewSuggestions.message、fileSummaries.summary 必须是中文表达。
+12. 语言要简洁。`;
 
 type AnalyzePullRequestInput = {
   prInfo: PrInfo;
@@ -150,25 +153,22 @@ async function callAiApi(
 }
 
 function buildUserPrompt(context: AiReviewContext): string {
-  return `PR Info:
+  return `PR 信息:
 ${JSON.stringify(context.prInfo, null, 2)}
 
-Rule Precheck Findings:
+规则预检测结果:
 ${JSON.stringify(context.ruleFindings, null, 2)}
 
-Limited Context Files:
+有限上下文文件:
 ${JSON.stringify(context.contextFiles, null, 2)}
 
-Changed Files And Patches:
+变更文件和 patch:
 ${JSON.stringify(context.changedFiles, null, 2)}
 
-Field Guide:
+字段说明:
 ${JSON.stringify(context.fieldGuide, null, 2)}
 
-Context Policy:
-${JSON.stringify(context.contextPolicy, null, 2)}
-
-Analyze this PR and return strict JSON only.`;
+请分析这个 PR，并只返回严格 JSON。所有解释性内容必须使用中文，必要技术名词、文件路径和代码标识符可以保留原文。`;
 }
 
 function parseStrictJson(content: string): AiJsonResponse {

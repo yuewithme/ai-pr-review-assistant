@@ -103,7 +103,45 @@ test("buildAiReviewContext truncates long patches and context files", () => {
   );
 
   assert.equal(context.contextPolicy.truncated, true);
-  assert.match(context.changedFiles[0].patch, /truncated/);
-  assert.match(context.contextFiles[0].content, /truncated/);
+  assert.doesNotMatch(context.changedFiles[0].patch, /truncated|内容截断/i);
+  assert.doesNotMatch(context.contextFiles[0].content, /truncated|内容截断/i);
+  assert.equal(context.changedFiles[0].patch.length <= 100, true);
+  assert.equal(context.contextFiles[0].content.length <= 80, true);
 });
 
+test("buildAiReviewContext preserves higher-risk diff hunks when trimming patches", () => {
+  const longLowRiskHunk = [
+    "@@ -1,4 +1,4 @@",
+    `+${"x".repeat(300)}`,
+  ].join("\n");
+  const authHunk = [
+    "@@ -20,4 +20,4 @@",
+    "- return false;",
+    "+ return token !== undefined;",
+  ].join("\n");
+  const patch = `${longLowRiskHunk}\n${authHunk}`;
+  const ruleFindings: RuleFinding[] = [
+    {
+      type: "permission",
+      level: "medium",
+      filePath: "src/auth.ts",
+      message: "Permission-sensitive path changed.",
+    },
+  ];
+
+  const context = buildAiReviewContext(
+    {
+      prInfo,
+      changedFiles: [file({ filename: "src/auth.ts", patch })],
+      contextFiles: [],
+      ruleFindings,
+    },
+    {
+      maxPatchCharsPerFile: 120,
+      maxTotalChars: 1_000,
+    },
+  );
+
+  assert.match(context.changedFiles[0].patch, /token/);
+  assert.doesNotMatch(context.changedFiles[0].patch, /truncated|内容截断/i);
+});
