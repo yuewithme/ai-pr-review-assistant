@@ -73,6 +73,8 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
                   {
                     filePath: "src/auth/middleware.ts",
                     message: "Could you add a regression test for invalid token handling?",
+                    suggestedCode:
+                      "test('rejects invalid token', async () => {\n  expect(checkAuth('bad-token')).toBe(false);\n});",
                   },
                 ],
                 fileSummaries: [
@@ -106,11 +108,13 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
   assert.equal(result.risks[0].filePath, "src/auth/middleware.ts");
   assert.equal(result.risks[0].evidence, "patch 中新增了 token 存在时直接返回 true 的判断。");
   assert.equal(result.risks[0].codeSnippet, "+ if (token) return true");
+  assert.match(result.reviewSuggestions[0].suggestedCode || "", /rejects invalid token/);
   assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
   assert.match(requestBody, /只返回严格 JSON/);
   assert.match(requestBody, /所有解释性内容必须使用中文/);
   assert.match(requestBody, /不要原样照抄成风险描述/);
   assert.match(requestBody, /codeSnippet/);
+  assert.match(requestBody, /suggestedCode/);
   assert.match(requestBody, /两者不能写成同一句话/);
   assert.match(requestBody, /deepseek-v4-flash/);
 });

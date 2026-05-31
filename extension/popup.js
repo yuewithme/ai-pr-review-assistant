@@ -129,21 +129,28 @@ async function reopenCurrentReport() {
 }
 
 async function loadSessionReport(analysisId) {
+  return loadStoredReport(analysisId);
+}
+
+async function loadStoredReport(analysisId) {
   const key = `report:${analysisId}`;
   const record = await chrome.storage.session.get([key]);
   const report = record[key];
 
-  if (!report?.html) {
-    return null;
+  if (report?.html) {
+    return {
+      analysisId,
+      prUrl: report.prUrl,
+      title: report.title,
+      html: report.html,
+      createdAt: report.createdAt,
+    };
   }
 
-  return {
-    analysisId,
-    prUrl: report.prUrl,
-    title: report.title,
-    html: report.html,
-    createdAt: report.createdAt,
-  };
+  const { recentReports = [] } = await chrome.storage.local.get(["recentReports"]);
+  const localReport = recentReports.find((item) => item.analysisId === analysisId && item.html);
+
+  return localReport || null;
 }
 
 async function downloadCurrentReport() {

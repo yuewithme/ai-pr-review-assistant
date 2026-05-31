@@ -66,6 +66,7 @@ function createReviewSuggestions(
   const riskSuggestions = risks.map((risk) => ({
     filePath: risk.filePath,
     message: `建议在合并前复核 ${risk.filePath} 中的 ${risk.type} 相关改动是否符合预期。`,
+    suggestedCode: createSuggestedCode(risk),
   }));
 
   if (riskSuggestions.length > 0) {
@@ -75,7 +76,22 @@ function createReviewSuggestions(
   return files.slice(0, 3).map((file) => ({
     filePath: file.filename,
     message: `请确认 ${file.filename} 的 diff 与本次 PR 目标一致。`,
+    suggestedCode: "",
   }));
+}
+
+function createSuggestedCode(risk: AnalysisRisk): string {
+  const snippet = risk.codeSnippet?.trim();
+
+  if (!snippet) {
+    return "";
+  }
+
+  if (risk.type === "test-missing") {
+    return `test("覆盖 ${risk.filePath} 的异常或边界场景", async () => {\n  // 基于本次 PR 的实际接口补充断言\n});`;
+  }
+
+  return `${snippet}\n// 请基于上方变更补充明确校验、错误处理或类型约束后再合并。`;
 }
 
 function createSummary(fileCount: number, fileSummaries: FileSummary[]): string {

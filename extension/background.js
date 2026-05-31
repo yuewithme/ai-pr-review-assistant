@@ -124,6 +124,7 @@ async function saveRecentReport(report) {
       analysisId: report.analysisId,
       prUrl: report.prUrl,
       title: report.title,
+      html: report.html,
       createdAt: report.createdAt,
     },
     ...recentReports.filter((item) => item.analysisId !== report.analysisId),

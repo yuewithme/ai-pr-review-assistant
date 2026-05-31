@@ -56,5 +56,18 @@ test("extension background owns long running report generation state", async () 
   assert.match(background, /CURRENT_TASK_KEY/);
   assert.match(background, /chrome\.storage\.session/);
   assert.match(background, /chrome\.storage\.local/);
+  assert.match(background, /html: report\.html/);
   assert.match(background, /chrome\.tabs\.create/);
+});
+
+test("extension report viewer restores history reports from local storage", async () => {
+  const reportViewer = await readFile("extension/report-viewer.js", "utf-8");
+  const popup = await readFile("extension/popup.js", "utf-8");
+
+  assert.match(reportViewer, /chrome\.storage\.session/);
+  assert.match(reportViewer, /chrome\.storage\.local/);
+  assert.match(reportViewer, /recentReports/);
+  assert.match(reportViewer, /loadStoredReport/);
+  assert.match(popup, /loadStoredReport/);
+  assert.match(popup, /recentReports/);
 });

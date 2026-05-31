@@ -62,4 +62,5 @@ test("mockAnalysisResult returns a stable analysis result from real changed file
   assert.match(result.risks[0].evidence, /来源于规则预检测/);
   assert.equal(result.risks[0].codeSnippet, "+ const canLogin = true;");
   assert.match(result.reviewSuggestions[0].message, /合并前复核/);
+  assert.match(result.reviewSuggestions[0].suggestedCode || "", /const canLogin = true/);
 });

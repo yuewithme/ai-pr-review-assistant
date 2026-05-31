@@ -34,6 +34,7 @@ export type AnalysisRisk = {
 export type ReviewSuggestion = {
   filePath: string;
   message: string;
+  suggestedCode?: string;
 };
 
 export type FileSummary = {

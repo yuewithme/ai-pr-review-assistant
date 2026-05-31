@@ -10,17 +10,28 @@ async function loadReport() {
     return;
   }
 
-  const key = `report:${analysisId}`;
-  const record = await chrome.storage.session.get([key]);
-  const report = record[key];
+  const report = await loadStoredReport(analysisId);
 
   if (!report?.html) {
-    renderEmpty("当前浏览器会话中没有找到这份报告，请重新分析 PR。");
+    renderEmpty("这份历史报告的 HTML 已过期，请重新分析 PR。");
     return;
   }
 
   document.title = report.title || "PR Review Report";
   frame.srcdoc = report.html;
+}
+
+async function loadStoredReport(analysisId) {
+  const key = `report:${analysisId}`;
+  const sessionRecord = await chrome.storage.session.get([key]);
+  const sessionReport = sessionRecord[key];
+
+  if (sessionReport?.html) {
+    return sessionReport;
+  }
+
+  const { recentReports = [] } = await chrome.storage.local.get(["recentReports"]);
+  return recentReports.find((report) => report.analysisId === analysisId && report.html) || null;
 }
 
 function renderEmpty(message) {

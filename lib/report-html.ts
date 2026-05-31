@@ -123,6 +123,8 @@ export function renderPrReviewHtmlReport(result: AnalysisResult): string {
     .evidence-link:hover { text-decoration: underline; }
     .comment { padding: 14px 16px; margin-top: 10px; }
     .comment p { margin-top: 6px; }
+    .suggested-code { margin-top: 12px; }
+    .suggested-code h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
     .file-list { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
     .file-row { display: grid; grid-template-columns: minmax(220px, 32%) 1fr; gap: 14px; align-items: start; padding: 10px 14px; border-top: 1px solid var(--line); }
     .file-row:first-child { border-top: 0; }
@@ -290,12 +292,18 @@ function renderSuggestion(
   filesUrl: string,
 ): string {
   const type = inferSuggestionType(suggestion.message);
+  const suggestedCode = suggestion.suggestedCode?.trim();
 
   return `
       <article class="comment">
         <h3>${escapeHtml(type)}</h3>
         ${renderLink(suggestion.filePath, buildFileDiffUrl(filesUrl, suggestion.filePath), "path")}
         <p>${escapeHtml(suggestion.message)}</p>
+        ${
+          suggestedCode
+            ? `<div class="suggested-code"><h4>建议修改后的代码</h4><pre class="code-snippet"><code>${escapeHtml(suggestedCode)}</code></pre></div>`
+            : ""
+        }
       </article>`;
 }
 

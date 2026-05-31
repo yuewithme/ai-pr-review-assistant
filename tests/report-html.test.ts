@@ -36,6 +36,7 @@ const result: AnalysisResult = {
     {
       filePath: "lib/parser.ts",
       message: "Add parser edge case tests.",
+      suggestedCode: "test('rejects invalid JSON request body', async () => {\n  // assert 400 INVALID_JSON\n});",
     },
   ],
   fileSummaries: [
@@ -58,6 +59,8 @@ test("renderPrReviewHtmlReport returns the fixed HTML report shape", () => {
   assert.match(html, /Add parser/);
   assert.match(html, /风险详情/);
   assert.match(html, /Review 建议/);
+  assert.match(html, /建议修改后的代码/);
+  assert.match(html, /rejects invalid JSON request body/);
   assert.match(html, /文件级变更摘要/);
   assert.match(html, /security \/ 安全/);
   assert.match(html, /patch 中新增了环境变量示例占位符/);

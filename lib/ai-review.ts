@@ -37,7 +37,8 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
   "reviewSuggestions": [
     {
       "filePath": "string",
-      "message": "string"
+      "message": "string",
+      "suggestedCode": "string"
     }
   ],
   "fileSummaries": [
@@ -65,7 +66,9 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
 12. risk.message 说明“问题是什么”，risk.evidence 说明“从哪段 diff 或规则线索看出来”，两者不能写成同一句话。
 13. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
 14. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的点，不能只写“建议优化”。
-15. 语言要简洁。`;
+15. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，返回空字符串。
+16. reviewSuggestions.suggestedCode 要和同一文件的风险或建议对应，代码可以是精简片段，不要编造不存在的 API。
+17. 语言要简洁。`;
 
 type AnalyzePullRequestInput = {
   prInfo: PrInfo;
@@ -280,6 +283,8 @@ function normalizeReviewSuggestions(
       {
         filePath: candidate.filePath,
         message: candidate.message,
+        suggestedCode:
+          typeof candidate.suggestedCode === "string" ? candidate.suggestedCode : "",
       },
     ];
   });
