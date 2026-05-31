@@ -39,6 +39,9 @@
     "被截断文件的问题优先放入 openQuestions 或 limitations",
     "mainModules 优先使用目录、文件路径或模块边界，不要只写抽象业务名称",
     "Review 建议要像真实 code review 评论",
+    "风险的问题描述和依据不能重复；description 写问题，evidence 写证据来源和判断依据",
+    "codeSnippet 优先摘录 changedFiles.patch 中最相关的新增或修改代码；没有明确代码时返回空字符串",
+    "suggestion 必须详细到 reviewer 或作者知道下一步怎么改、补什么测试、确认什么边界",
     "JSON 字符串不要包含未转义的反斜杠；如果需要描述正则表达式，请优先用自然语言描述"
   ],
   "outputSchema": {
@@ -70,6 +73,7 @@
         "position": "string",
         "description": "string",
         "evidence": "string",
+        "codeSnippet": "string",
         "evidenceSource": "patch | ruleFinding | metadata | context | mixed",
         "impact": "string",
         "suggestion": "string",

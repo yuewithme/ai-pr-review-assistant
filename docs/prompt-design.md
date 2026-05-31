@@ -48,6 +48,9 @@ Analysis output must stay evidence-based:
 - The prompt should not expose internal context trimming details to the report.
 - User-facing analysis text must be Chinese. Technical identifiers such as file paths, code symbols, branch names, enum values, and terms like `TypeScript`, `GitHub`, `API`, `JSON`, `diff`, `patch`, and `token` may remain in English.
 - English rule precheck messages or context snippets should be rewritten into Chinese explanations before they appear in `summary`, risks, review suggestions, or file summaries.
+- Risk descriptions and evidence must not duplicate each other. The description states the issue; evidence explains the concrete basis from patch, rule finding, metadata, or context.
+- When possible, risk output should include a `codeSnippet` copied from `changedFiles.patch`. If no concrete snippet exists, use an empty string instead of inventing code.
+- Suggestions should be actionable for humans: what to change, what to test, and what boundary to confirm.
 
 ## Display Prompt Contract
 
@@ -73,6 +76,14 @@ The HTML prompt fixes the report format used by the project:
 9. Overall conclusion.
 
 Risk details must not show a separate `position` field. File names already link to the corresponding PR file diff when `fileLinks[filePath]` is available.
+
+Risk details should show:
+
+- Issue: the concise risk statement.
+- Evidence: why the model believes this risk exists.
+- Problem code: `risk.codeSnippet`, when available.
+- Link: file name or “查看该文件在 PR 中的变更” should jump to the PR Files view for that file.
+- Suggestion: detailed enough for the author to act on.
 
 Risk types must be displayed in English and Chinese, for example:
 

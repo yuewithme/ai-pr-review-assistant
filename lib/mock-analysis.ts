@@ -12,7 +12,12 @@ export function mockAnalysisResult(
   ruleFindings: RuleFinding[],
 ): AnalysisResult {
   const fileSummaries = prData.files.map(createFileSummary);
-  const risks = ruleFindings.map(createRiskFromRuleFinding);
+  const risks = ruleFindings.map((finding) =>
+    createRiskFromRuleFinding(
+      finding,
+      prData.files.find((file) => file.filename === finding.filePath),
+    ),
+  );
 
   return {
     analysisId: createAnalysisId(prData.pr.url),
@@ -37,13 +42,19 @@ function createFileSummary(file: ChangedFile): FileSummary {
   };
 }
 
-function createRiskFromRuleFinding(finding: RuleFinding): AnalysisRisk {
+function createRiskFromRuleFinding(
+  finding: RuleFinding,
+  file?: ChangedFile,
+): AnalysisRisk {
   return {
     type: finding.type,
     level: finding.level,
     filePath: finding.filePath,
     message: `规则预检测提示该文件存在 ${finding.type} 相关关注点，需要结合实际 diff 复核。`,
-    suggestion: "请将该规则命中作为审查线索，确认实际代码影响后再判断是否属于确定风险。",
+    evidence: `来源于规则预检测：${finding.type} 命中 ${finding.filePath}。请结合下方代码片段或 PR 文件变更确认实际影响。`,
+    codeSnippet: extractRelevantPatchSnippet(file?.patch),
+    suggestion:
+      "请打开该文件的 PR diff，确认规则命中的代码是否真的影响功能、安全或维护成本；如果确认存在影响，再补充对应测试或把相关逻辑收敛到更明确的实现中。",
     confidence: 0.6,
   };
 }
@@ -82,4 +93,16 @@ function createAnalysisId(seed: string): string {
   }
 
   return `mock_${hash.toString(16)}`;
+}
+
+function extractRelevantPatchSnippet(patch?: string): string {
+  if (!patch) {
+    return "";
+  }
+
+  return patch
+    .split("\n")
+    .filter((line) => line.startsWith("+") && !line.startsWith("+++"))
+    .slice(0, 8)
+    .join("\n");
 }

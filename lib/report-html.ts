@@ -117,6 +117,10 @@ export function renderPrReviewHtmlReport(result: AnalysisResult): string {
     .risk dl { display: grid; grid-template-columns: 88px 1fr; gap: 8px 12px; margin: 14px 0 0; }
     .risk dt { color: var(--muted); }
     .risk dd { margin: 0; }
+    .evidence-block { display: grid; gap: 8px; }
+    .code-snippet { margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: #0f172a; color: #e2e8f0; font: 12px/1.55 Consolas, "SFMono-Regular", monospace; overflow-x: auto; white-space: pre-wrap; }
+    .evidence-link { color: var(--blue); font-weight: 700; text-decoration: none; }
+    .evidence-link:hover { text-decoration: underline; }
     .comment { padding: 14px 16px; margin-top: 10px; }
     .comment p { margin-top: 6px; }
     .file-list { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -263,12 +267,22 @@ function renderRisk(risk: AnalysisRisk, filesUrl: string): string {
         <dl>
           <dt>类型</dt><dd>${escapeHtml(formatRiskType(risk.type))}</dd>
           <dt>问题</dt><dd>${escapeHtml(risk.message)}</dd>
-          <dt>依据</dt><dd>${escapeHtml(risk.message)}</dd>
+          <dt>依据</dt><dd>${renderEvidence(risk, fileUrl)}</dd>
           <dt>影响</dt><dd>${escapeHtml(inferImpact(risk))}</dd>
           <dt>建议</dt><dd>${escapeHtml(risk.suggestion)}</dd>
           <dt>置信度</dt><dd>${escapeHtml(String(risk.confidence))}</dd>
         </dl>
       </article>`;
+}
+
+function renderEvidence(risk: AnalysisRisk, fileUrl: string): string {
+  const codeSnippet = risk.codeSnippet?.trim();
+
+  return `<div class="evidence-block">
+            <p>${escapeHtml(risk.evidence || risk.message)}</p>
+            ${codeSnippet ? `<pre class="code-snippet"><code>${escapeHtml(codeSnippet)}</code></pre>` : ""}
+            <a class="evidence-link" href="${escapeAttribute(fileUrl)}" target="_blank" rel="noreferrer">查看该文件在 PR 中的变更</a>
+          </div>`;
 }
 
 function renderSuggestion(

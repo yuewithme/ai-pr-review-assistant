@@ -25,6 +25,8 @@ export type AnalysisRisk = {
   level: RuleFindingLevel;
   filePath: string;
   message: string;
+  evidence: string;
+  codeSnippet?: string;
   suggestion: string;
   confidence: number;
 };

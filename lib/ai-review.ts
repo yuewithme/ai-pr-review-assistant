@@ -28,6 +28,8 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
       "level": "low | medium | high",
       "filePath": "string",
       "message": "string",
+      "evidence": "string",
+      "codeSnippet": "string",
       "suggestion": "string",
       "confidence": 0.0
     }
@@ -60,7 +62,10 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
 9. 除以下内容外，所有可见解释性文本必须使用中文：文件路径、代码标识符、函数名、变量名、包名、分支名、PR 标题、risk type 枚举值、status 枚举值、TypeScript、GitHub、API、JSON、diff、patch、token 等技术名词。
 10. 如果输入中的 ruleFindings、patch 注释或上下文字段是英文，不要原样照抄成风险描述；请在保留必要技术名词的前提下转写为自然中文。
 11. summary、risk.message、risk.suggestion、reviewSuggestions.message、fileSummaries.summary 必须是中文表达。
-12. 语言要简洁。`;
+12. risk.message 说明“问题是什么”，risk.evidence 说明“从哪段 diff 或规则线索看出来”，两者不能写成同一句话。
+13. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
+14. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的点，不能只写“建议优化”。
+15. 语言要简洁。`;
 
 type AnalyzePullRequestInput = {
   prInfo: PrInfo;
@@ -235,6 +240,12 @@ function normalizeRisks(
         level: candidate.level,
         filePath: candidate.filePath,
         message: candidate.message,
+        evidence:
+          typeof candidate.evidence === "string" && candidate.evidence.trim() !== ""
+            ? candidate.evidence
+            : candidate.message,
+        codeSnippet:
+          typeof candidate.codeSnippet === "string" ? candidate.codeSnippet : "",
         suggestion: candidate.suggestion,
         confidence: clampConfidence(candidate.confidence),
       },

@@ -63,7 +63,9 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
                     level: "medium",
                     filePath: "src/auth/middleware.ts",
                     message: "Auth decision logic changed.",
-                    suggestion: "Please add tests for missing and invalid tokens.",
+                    evidence: "patch 中新增了 token 存在时直接返回 true 的判断。",
+                    codeSnippet: "+ if (token) return true",
+                    suggestion: "请补充 token 缺失、无效 token 和有效 token 的回归测试，确认鉴权分支符合预期。",
                     confidence: 0.82,
                   },
                 ],
@@ -102,10 +104,14 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
   assert.equal(result.summary, "Auth middleware behavior changed.");
   assert.equal(result.risks[0].confidence, 0.82);
   assert.equal(result.risks[0].filePath, "src/auth/middleware.ts");
+  assert.equal(result.risks[0].evidence, "patch 中新增了 token 存在时直接返回 true 的判断。");
+  assert.equal(result.risks[0].codeSnippet, "+ if (token) return true");
   assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
   assert.match(requestBody, /只返回严格 JSON/);
   assert.match(requestBody, /所有解释性内容必须使用中文/);
   assert.match(requestBody, /不要原样照抄成风险描述/);
+  assert.match(requestBody, /codeSnippet/);
+  assert.match(requestBody, /两者不能写成同一句话/);
   assert.match(requestBody, /deepseek-v4-flash/);
 });
 
@@ -130,7 +136,8 @@ test("analyzePullRequest falls back when AI JSON cannot be parsed", async () => 
   assert.match(result.summary, /模拟分析已覆盖/);
   assert.equal(result.risks[0].confidence, 0.6);
   assert.match(result.risks[0].message, /规则预检测/);
-  assert.match(result.risks[0].suggestion, /审查线索/);
+  assert.match(result.risks[0].evidence, /来源于规则预检测/);
+  assert.match(result.risks[0].suggestion, /打开该文件的 PR diff/);
 });
 
 test("analyzePullRequest truncates long patches before sending to AI", async () => {

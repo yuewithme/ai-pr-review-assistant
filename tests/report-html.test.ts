@@ -26,7 +26,9 @@ const result: AnalysisResult = {
       level: "low",
       filePath: ".env.example",
       message: "Environment example changed.",
-      suggestion: "Keep real secrets out of examples.",
+      evidence: "patch 中新增了环境变量示例占位符。",
+      codeSnippet: "+DEEPSEEK_API_KEY=your_deepseek_api_key",
+      suggestion: "请确认示例文件只包含占位符，并在提交前检查不会把真实密钥写入版本控制。",
       confidence: 0.4,
     },
   ],
@@ -58,6 +60,9 @@ test("renderPrReviewHtmlReport returns the fixed HTML report shape", () => {
   assert.match(html, /Review 建议/);
   assert.match(html, /文件级变更摘要/);
   assert.match(html, /security \/ 安全/);
+  assert.match(html, /patch 中新增了环境变量示例占位符/);
+  assert.match(html, /\+DEEPSEEK_API_KEY=your_deepseek_api_key/);
+  assert.match(html, /查看该文件在 PR 中的变更/);
   assert.match(html, /pull\/123\/files#diff-/);
   assert.doesNotMatch(html, /内容截断|truncated|<dt>位置<\/dt>/i);
 });
