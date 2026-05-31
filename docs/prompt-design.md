@@ -37,7 +37,6 @@ The analysis prompt should only generate structured review content:
 - Review suggestions.
 - File-level summaries.
 - Test suggestions.
-- Overall conclusion.
 
 Analysis output must stay evidence-based:
 
@@ -58,7 +57,7 @@ Analysis output must stay evidence-based:
 
 The display prompt should not discover new risks. It only reshapes the analysis result for human reading:
 
-- Preserve risk count, level, file path, confidence, and conclusion.
+- Preserve risk count, level, file path, and confidence.
 - Improve wording for readability.
 - Keep report sections stable.
 - Keep file names and review comments easy to scan.
@@ -75,7 +74,7 @@ The HTML prompt fixes the report format used by the project:
 6. Review suggestions.
 7. Test suggestions.
 8. Compact file-level summaries.
-9. Overall conclusion.
+9. Footer note.
 
 Risk details must not show a separate `position` field. File names already link to the corresponding PR file diff when `fileLinks[filePath]` is available.
 
@@ -87,10 +86,12 @@ Risk details should show:
 - Link: file name or “查看该文件在 PR 中的变更” should jump to the PR Files view for that file.
 - Suggestion: detailed enough for the author to act on.
 - Suggestion code comparison: use `risk.codeSnippet` as before code and `risk.suggestedCode` as after code when available.
+- Do not render a separate overall conclusion section; it tends to repeat the risk summary without adding actionable value.
 
 Review suggestions may additionally show:
 
 - Code comparison: `suggestion.currentCode` and `suggestion.suggestedCode`, when available, under the matching review comment.
+- Actionable review comment: identify the exact code concern, explain why it matters, and state the next change or test to add.
 
 Risk types must be displayed in English and Chinese, for example:
 

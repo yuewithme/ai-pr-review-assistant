@@ -58,7 +58,7 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
 2. 每条风险都必须绑定 changed files 中真实存在的 filePath。
 3. 除非 diff 或规则预检测结果提供明确代码依据，否则不要输出 high 风险。
 4. 每条风险都必须包含 0 到 1 之间的 confidence。
-5. reviewSuggestions 要像真实 code review 评论：具体、可执行，并且和变更代码相关。
+5. reviewSuggestions 要像真实 code review 评论：具体、可执行，并且和变更代码相关；不要输出“请确认是否符合预期”这类没有行动指向的空话。
 6. rule precheck findings 只是分析线索，不是最终风险结论。
 7. 如果证据较弱，优先输出 medium 或 low 风险；也可以用 review 建议提出人工确认，不要强行断言风险。
 8. fileSummaries 必须基于 changed files 生成。
@@ -66,12 +66,16 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
 10. 如果输入中的 ruleFindings、patch 注释或上下文字段是英文，不要原样照抄成风险描述；请在保留必要技术名词的前提下转写为自然中文。
 11. summary、risk.message、risk.suggestion、reviewSuggestions.message、fileSummaries.summary 必须是中文表达。
 12. risk.message 说明“问题是什么”，risk.evidence 说明“从哪段 diff 或规则线索看出来”，两者不能写成同一句话。
-13. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
-14. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的点，不能只写“建议优化”。
-15. 如果 risk.suggestion 有明确代码改法，risk.suggestedCode 必须给出修改后代码；如果只能人工确认，返回空字符串。
-16. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.currentCode 必须给出当前相关代码，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，两个字段返回空字符串。
-17. currentCode、codeSnippet 和 suggestedCode 要能形成“修改前 / 修改后”对比，优先基于 changedFiles.patch 中已有代码改写，不要编造不存在的 API。
-18. 语言要简洁。`;
+13. 每条风险必须尽量写清四件事：触发条件、具体证据、可能影响路径、建议验证方式。缺少其中任一项时应降低 level 或 confidence。
+14. risk.evidence 必须引用具体 patch 片段、文件路径、规则命中或上下文字段；不要只重复 risk.message。
+15. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
+16. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的边界，不能只写“建议优化”“建议检查”“建议复核”。
+17. 如果 risk.suggestion 有明确代码改法，risk.suggestedCode 必须给出修改后代码；如果只能人工确认，返回空字符串。
+18. reviewSuggestions.message 必须像可以直接贴到 GitHub 的 review comment：点名具体问题、说明为什么要改、给出下一步动作。不要输出泛泛的流程性建议。
+19. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.currentCode 必须给出当前相关代码，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，两个字段返回空字符串。
+20. currentCode、codeSnippet 和 suggestedCode 要能形成“修改前 / 修改后”对比，优先基于 changedFiles.patch 中已有代码改写，不要编造不存在的 API。
+21. 对测试建议要尽量写出测试场景、输入、期望输出或断言目标，避免只说“补充测试”。
+22. 语言要简洁。`;
 
 type AnalyzePullRequestInput = {
   prInfo: PrInfo;

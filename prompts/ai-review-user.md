@@ -17,8 +17,7 @@
     "识别潜在风险代码",
     "生成可复制的 Review 建议",
     "生成文件级变更摘要",
-    "生成测试建议",
-    "给出总体审查结论"
+    "生成测试建议"
   ],
   "outputRules": [
     "全部使用中文",
@@ -39,12 +38,16 @@
     "被截断文件的问题优先放入 openQuestions 或 limitations",
     "mainModules 优先使用目录、文件路径或模块边界，不要只写抽象业务名称",
     "Review 建议要像真实 code review 评论",
+    "Review 建议不能是空泛提醒；必须点名具体代码、具体风险或具体测试缺口，并给出下一步动作",
     "风险的问题描述和依据不能重复；description 写问题，evidence 写证据来源和判断依据",
+    "每条风险尽量写清触发条件、具体证据、影响路径、验证方式；缺少明确影响路径时不要提高风险等级",
+    "evidence 必须指向具体 patch 片段、文件路径、规则命中或上下文字段，不要只复述 description",
     "codeSnippet 优先摘录 changedFiles.patch 中最相关的新增或修改代码；没有明确代码时返回空字符串",
-    "suggestion 必须详细到 reviewer 或作者知道下一步怎么改、补什么测试、确认什么边界",
+    "suggestion 必须详细到 reviewer 或作者知道下一步怎么改、补什么测试、确认什么边界；不要只写建议复核、建议检查、建议优化",
     "risk.suggestedCode 用于在风险详情的建议字段展示修改后代码；有明确改法时必须给出精简代码片段，只能人工确认时返回空字符串",
     "reviewSuggestions.currentCode 和 reviewSuggestions.suggestedCode 用于展示修改前后对比；有明确改法或测试补充时必须同时给出，只能人工确认时返回空字符串",
     "currentCode、codeSnippet 和 suggestedCode 必须能互相对应，优先基于 patch 中已有代码改写，不要编造不存在的 API",
+    "测试类 Review 建议必须尽量包含测试场景、输入条件、期望输出或断言目标",
     "JSON 字符串不要包含未转义的反斜杠；如果需要描述正则表达式，请优先用自然语言描述"
   ],
   "outputSchema": {
@@ -112,10 +115,6 @@
       "scenarios": ["string"],
       "edgeCases": ["string"],
       "hasTestMissingRisk": false
-    },
-    "conclusion": {
-      "decision": "建议通过 | 建议修改后通过 | 建议重点人工复查",
-      "reason": "string"
     }
   },
   "input": {{AI_REVIEW_CONTEXT_JSON}}

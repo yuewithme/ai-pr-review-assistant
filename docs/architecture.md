@@ -56,7 +56,6 @@ Uses AI prompts to produce structured PR review analysis:
 - Review suggestions.
 - File-level summaries.
 - Test suggestions.
-- Overall conclusion.
 
 ### Prompt Templates
 

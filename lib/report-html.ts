@@ -231,14 +231,6 @@ export function renderPrReviewHtmlReport(result: AnalysisResult): string {
       </div>
     </section>
 
-    <section>
-      <h2>总体结论</h2>
-      <div class="panel">
-        <h3>${escapeHtml(conclusion.decision)}</h3>
-        <p>${escapeHtml(conclusion.reason)}</p>
-      </div>
-    </section>
-
     <p class="footer">本报告由 AI PR Review Assistant 生成，请结合人工审查判断。</p>
   </main>
 </body>

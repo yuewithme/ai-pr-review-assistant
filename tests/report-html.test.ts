@@ -68,6 +68,7 @@ test("renderPrReviewHtmlReport returns the fixed HTML report shape", () => {
   assert.match(html, /rejects invalid JSON request body/);
   assert.match(html, /DEEPSEEK_API_KEY=your_deepseek_api_key/);
   assert.match(html, /文件级变更摘要/);
+  assert.doesNotMatch(html, /总体结论/);
   assert.match(html, /security \/ 安全/);
   assert.match(html, /patch 中新增了环境变量示例占位符/);
   assert.match(html, /\+DEEPSEEK_API_KEY=your_deepseek_api_key/);
