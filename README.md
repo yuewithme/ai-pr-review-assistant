@@ -35,6 +35,7 @@ app/                   Next.js App Router API routes
 docs/                  Product and architecture documentation
 lib/                   Backend parsing, GitHub fetch, context, rules, and AI review logic
 types/                 Shared TypeScript types
+extension/             Chrome extension MVP
 src/ai_pr_review/      Core Python package
 tests/                 Unit tests and fixtures
 examples/              Sample diff and sample report
@@ -54,3 +55,9 @@ See `docs/README.md` for the full documentation index, and `docs/prompt-design.m
 ## Current Status
 
 The repository contains the backend API foundation, GitHub PR fetch flow, rule precheck module, AI analysis integration, prompt templates, and an example HTML report.
+
+## Browser Extension MVP
+
+The `extension/` directory contains a Chrome Manifest V3 extension prototype.
+
+It detects the current GitHub PR page, lets the user trigger analysis from a popup, calls `POST /api/pr/report-html`, opens the generated HTML report in a new tab, and keeps only lightweight recent-report metadata in local extension storage.

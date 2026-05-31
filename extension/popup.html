@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI PR Review</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="popup">
+    <header>
+      <div class="eyebrow">AI PR Review</div>
+      <h1>PR 分析助手</h1>
+    </header>
+
+    <label class="field">
+      <span>后端地址</span>
+      <input id="backendUrlInput" type="url" placeholder="http://localhost:3000" />
+    </label>
+
+    <label class="field">
+      <span>GitHub PR 链接</span>
+      <textarea id="prUrlInput" rows="3" placeholder="请粘贴 GitHub PR 链接"></textarea>
+    </label>
+
+    <button id="analyzeButton" class="primary">开始分析</button>
+
+    <section class="status">
+      <div id="statusText">等待输入 PR 链接</div>
+      <ol id="steps">
+        <li data-step="parse">解析 PR</li>
+        <li data-step="fetch">获取变更</li>
+        <li data-step="analyze">AI 分析</li>
+        <li data-step="report">生成报告</li>
+        <li data-step="done">完成</li>
+      </ol>
+    </section>
+
+    <section class="actions">
+      <button id="reopenButton" disabled>重新打开报告</button>
+      <button id="downloadButton" disabled>下载 HTML</button>
+      <button id="copyButton" disabled>复制 Review 建议</button>
+    </section>
+
+    <section class="history">
+      <h2>最近分析</h2>
+      <div id="historyList" class="history-list">暂无</div>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
