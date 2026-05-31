@@ -1,5 +1,5 @@
 const DEFAULT_BACKEND_URL = "http://localhost:3000";
-const MAX_RECENT_REPORTS = 5;
+const CURRENT_TASK_KEY = "currentTask";
 
 const backendUrlInput = document.getElementById("backendUrlInput");
 const prUrlInput = document.getElementById("prUrlInput");
@@ -15,6 +15,7 @@ let currentReport = null;
 document.addEventListener("DOMContentLoaded", async () => {
   await restoreSettings();
   await autofillCurrentPrUrl();
+  await restoreCurrentTask();
   await renderHistory();
 
   analyzeButton.addEventListener("click", analyzeCurrentPr);
@@ -22,6 +23,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   downloadButton.addEventListener("click", downloadCurrentReport);
   copyButton.addEventListener("click", copyCurrentReviewSuggestions);
   backendUrlInput.addEventListener("change", saveBackendUrl);
+
+  chrome.storage.onChanged.addListener(async (changes, areaName) => {
+    const taskChange = changes[CURRENT_TASK_KEY];
+
+    if (areaName !== "session" || !taskChange?.newValue) {
+      return;
+    }
+
+    await applyTaskState(taskChange.newValue);
+    await renderHistory();
+  });
 });
 
 async function restoreSettings() {
@@ -59,54 +71,71 @@ async function analyzeCurrentPr() {
 
   const backendUrl = normalizeBackendUrl(backendUrlInput.value);
   await chrome.storage.local.set({ lastBackendUrl: backendUrl });
+
   setBusy(true);
+  setActionButtons(false);
   resetSteps();
   setStep("parse");
+  setStatus("解析 PR 链接");
 
   try {
-    setStatus("解析 PR 链接");
-    await waitForUi();
-    setStep("fetch");
-    setStatus("获取 PR 变更");
-    await waitForUi();
-    setStep("analyze");
-    setStatus("AI 分析中");
-    const response = await fetch(`${backendUrl}/api/pr/report-html`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prUrl }),
+    const result = await chrome.runtime.sendMessage({
+      type: "START_ANALYSIS",
+      payload: { prUrl, backendUrl },
     });
 
-    const body = await response.json();
-
-    if (!response.ok || !body.success) {
-      throw new Error(body?.error?.message || "生成报告失败");
+    if (!result?.success) {
+      throw new Error(result?.error || "生成报告失败");
     }
 
-    setStep("report");
-    setStatus("生成 HTML 报告");
-
-    currentReport = {
-      analysisId: body.data.analysisId,
-      prUrl: body.data.prUrl,
-      title: extractHtmlTitle(body.data.html),
-      html: body.data.html,
-      createdAt: new Date().toISOString(),
-    };
-
-    await saveSessionReport(currentReport);
-    await saveRecentReport(currentReport);
-    await openReport(currentReport.analysisId);
+    await restoreCurrentTask();
     await renderHistory();
-
-    setStep("done");
-    setStatus("报告已打开");
-    setActionButtons(true);
   } catch (error) {
-    setStatus(error instanceof Error ? error.message : "生成报告失败", "error");
+    const message = error instanceof Error ? error.message : "生成报告失败";
+    setStatus(message, "error");
     markActiveStepError();
-  } finally {
     setBusy(false);
+  }
+}
+
+async function restoreCurrentTask() {
+  const { [CURRENT_TASK_KEY]: task } = await chrome.storage.session.get([
+    CURRENT_TASK_KEY,
+  ]);
+
+  if (!task) {
+    return;
+  }
+
+  await applyTaskState(task);
+}
+
+async function applyTaskState(task) {
+  resetSteps();
+  prUrlInput.value = task.prUrl || prUrlInput.value;
+  backendUrlInput.value = task.backendUrl || backendUrlInput.value;
+  setStep(task.step || "parse");
+  setStatus(task.message || "恢复上次分析状态", task.status === "failed" ? "error" : "normal");
+
+  if (task.status === "running") {
+    setBusy(true);
+    setActionButtons(false);
+    return;
+  }
+
+  if (task.status === "failed") {
+    setBusy(false);
+    setActionButtons(false);
+    markActiveStepError();
+    return;
+  }
+
+  if (task.status === "completed" && task.analysisId) {
+    currentReport = await loadSessionReport(task.analysisId);
+    setBusy(false);
+    setStep("done");
+    setStatus(task.message || "报告已生成");
+    setActionButtons(Boolean(currentReport));
   }
 }
 
@@ -116,6 +145,24 @@ async function reopenCurrentReport() {
   }
 
   await openReport(currentReport.analysisId);
+}
+
+async function loadSessionReport(analysisId) {
+  const key = `report:${analysisId}`;
+  const record = await chrome.storage.session.get([key]);
+  const report = record[key];
+
+  if (!report?.html) {
+    return null;
+  }
+
+  return {
+    analysisId,
+    prUrl: report.prUrl,
+    title: report.title,
+    html: report.html,
+    createdAt: report.createdAt,
+  };
 }
 
 async function downloadCurrentReport() {
@@ -148,32 +195,6 @@ async function openReport(analysisId) {
   await chrome.tabs.create({ url });
 }
 
-async function saveSessionReport(report) {
-  await chrome.storage.session.set({
-    [`report:${report.analysisId}`]: {
-      html: report.html,
-      title: report.title,
-      prUrl: report.prUrl,
-      createdAt: report.createdAt,
-    },
-  });
-}
-
-async function saveRecentReport(report) {
-  const { recentReports = [] } = await chrome.storage.local.get(["recentReports"]);
-  const nextReports = [
-    {
-      analysisId: report.analysisId,
-      prUrl: report.prUrl,
-      title: report.title,
-      createdAt: report.createdAt,
-    },
-    ...recentReports.filter((item) => item.analysisId !== report.analysisId),
-  ].slice(0, MAX_RECENT_REPORTS);
-
-  await chrome.storage.local.set({ recentReports: nextReports });
-}
-
 async function renderHistory() {
   const { recentReports = [] } = await chrome.storage.local.get(["recentReports"]);
 
@@ -190,11 +211,9 @@ async function renderHistory() {
     item.type = "button";
     item.innerHTML = `<strong>${escapeHtml(report.title)}</strong><span>${escapeHtml(report.prUrl)}</span>`;
     item.addEventListener("click", async () => {
-      currentReport = {
-        ...report,
-        html: "",
-      };
+      currentReport = await loadSessionReport(report.analysisId);
       await openReport(report.analysisId);
+      setActionButtons(Boolean(currentReport));
     });
     historyList.append(item);
   }
@@ -226,6 +245,7 @@ function normalizeBackendUrl(value) {
 
 function setBusy(isBusy) {
   analyzeButton.disabled = isBusy;
+  analyzeButton.textContent = isBusy ? "分析进行中" : "开始分析";
   prUrlInput.disabled = isBusy;
   backendUrlInput.disabled = isBusy;
 }
@@ -268,12 +288,6 @@ function markActiveStepError() {
   }
 }
 
-function extractHtmlTitle(html) {
-  const match = html.match(/<title>(.*?)<\/title>/i);
-
-  return match?.[1]?.replace(/^PR Review 报告 - /, "") || "PR Review 报告";
-}
-
 function extractReviewSuggestions(html) {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const section = [...doc.querySelectorAll("section")].find((item) =>
@@ -301,8 +315,4 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function waitForUi() {
-  return new Promise((resolve) => setTimeout(resolve, 100));
 }

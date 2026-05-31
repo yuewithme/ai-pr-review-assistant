@@ -21,15 +21,31 @@ test("extension manifest declares MV3 popup permissions and report pages", async
   assert.ok(manifest.host_permissions?.includes("http://localhost:3000/*"));
 });
 
-test("extension popup recognizes GitHub PR URLs and calls report-html endpoint", async () => {
+test("extension popup recognizes GitHub PR URLs and delegates analysis to background", async () => {
   const popup = await readFile("extension/popup.js", "utf-8");
 
   assert.match(popup, /normalizeGitHubPrUrl/);
   assert.match(popup, /github\.com/);
-  assert.match(popup, /\/api\/pr\/report-html/);
+  assert.match(popup, /chrome\.runtime\.sendMessage/);
+  assert.match(popup, /START_ANALYSIS/);
   assert.match(popup, /chrome\.storage\.local/);
   assert.match(popup, /chrome\.storage\.session/);
+  assert.match(popup, /CURRENT_TASK_KEY/);
+  assert.match(popup, /restoreCurrentTask/);
+  assert.match(popup, /applyTaskState/);
+  assert.match(popup, /chrome\.storage\.onChanged/);
   assert.match(popup, /chrome\.downloads\.download/);
   assert.match(popup, /chrome\.tabs\.create/);
 });
 
+test("extension background owns long running report generation state", async () => {
+  const background = await readFile("extension/background.js", "utf-8");
+
+  assert.match(background, /START_ANALYSIS/);
+  assert.match(background, /runAnalysis/);
+  assert.match(background, /\/api\/pr\/report-html/);
+  assert.match(background, /CURRENT_TASK_KEY/);
+  assert.match(background, /chrome\.storage\.session/);
+  assert.match(background, /chrome\.storage\.local/);
+  assert.match(background, /chrome\.tabs\.create/);
+});
