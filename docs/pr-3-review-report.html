@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PR Review 报告 - Add AI review prompt templates</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #17202a;
+      --muted: #667085;
+      --line: #d9dee7;
+      --accent: #1f7a5c;
+      --accent-soft: #e6f4ef;
+      --red: #b42318;
+      --red-soft: #fee4e2;
+      --amber: #b54708;
+      --amber-soft: #fef0c7;
+      --blue: #175cd3;
+      --blue-soft: #dbeafe;
+      --code: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; }
+    .page { max-width: 1120px; margin: 0 auto; padding: 32px 20px 56px; }
+    .hero { padding: 28px 0 20px; border-bottom: 1px solid var(--line); }
+    .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .02em; }
+    h1 { margin: 8px 0 10px; font-size: 34px; line-height: 1.2; }
+    h2 { margin: 0 0 16px; font-size: 22px; }
+    h3 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 860px; font-size: 16px; }
+    .decision { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 8px 12px; border-radius: 6px; background: var(--amber-soft); color: var(--amber); font-weight: 700; }
+    section { margin-top: 28px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .metric, .panel, .risk, .comment { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .overview-source { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 12px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .overview-source span { display: block; color: var(--muted); font-size: 12px; }
+    .overview-source strong { display: block; margin-top: 4px; font-size: 18px; }
+    .overview-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .button-link { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 10px; border-radius: 6px; background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; }
+    .button-link.secondary { background: var(--accent-soft); color: var(--accent); }
+    .metric { padding: 14px 16px; min-height: 108px; }
+    .metric span { display: block; color: var(--muted); font-size: 12px; }
+    .metric strong { display: block; margin-top: 5px; font-size: 20px; line-height: 1.25; word-break: break-word; }
+    .metric p { margin-top: 6px; color: var(--muted); font-size: 13px; }
+    a { color: inherit; }
+    .panel { padding: 18px; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 5px 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip { padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #344054; font-size: 12px; }
+    .risk-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .risk-count { padding: 14px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+    .risk-count strong { display: block; font-size: 26px; }
+    .risk-high { background: var(--red-soft); color: var(--red); }
+    .risk-medium { background: var(--amber-soft); color: var(--amber); }
+    .risk-low { background: var(--blue-soft); color: var(--blue); }
+    .risk { margin-top: 12px; padding: 16px; }
+    .risk header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .path { display: inline-block; margin-top: 6px; padding: 3px 7px; border-radius: 5px; background: var(--code); color: #344054; font-family: Consolas, "SFMono-Regular", monospace; font-size: 12px; word-break: break-all; text-decoration: none; }
+    .path:hover { text-decoration: underline; }
+    .risk dl { display: grid; grid-template-columns: 88px 1fr; gap: 8px 12px; margin: 14px 0 0; }
+    .risk dt { color: var(--muted); }
+    .risk dd { margin: 0; }
+    .evidence-block { display: grid; gap: 8px; }
+    .code-snippet { margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: #0f172a; color: #e2e8f0; font: 12px/1.55 Consolas, "SFMono-Regular", monospace; overflow-x: auto; white-space: pre-wrap; }
+    .evidence-link { color: var(--blue); font-weight: 700; text-decoration: none; }
+    .evidence-link:hover { text-decoration: underline; }
+    .comment { padding: 14px 16px; margin-top: 10px; }
+    .comment p { margin-top: 6px; }
+    .code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .code-compare h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+    .file-list { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .file-row { display: grid; grid-template-columns: minmax(220px, 32%) 1fr; gap: 14px; align-items: start; padding: 10px 14px; border-top: 1px solid var(--line); }
+    .file-row:first-child { border-top: 0; }
+    .file-row .path { margin-top: 0; max-width: 100%; }
+    .file-row p { margin: 2px 0 0; color: #344054; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .footer { margin-top: 30px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 760px) {
+      .grid, .risk-bar, .two-col { grid-template-columns: 1fr; }
+      .overview-source { grid-template-columns: 1fr; }
+      .overview-links { justify-content: flex-start; }
+      h1 { font-size: 26px; }
+      .risk header { display: block; }
+      .badge { margin-top: 10px; }
+      .risk dl { grid-template-columns: 1fr; }
+      .code-compare { grid-template-columns: 1fr; }
+      .file-row { grid-template-columns: 1fr; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow">AI PR Review 报告</div>
+      <h1>Add AI review prompt templates</h1>
+      <p class="subtitle">本次 PR 新增了 AI review 的 prompt 模板文件，并更新了相关的上下文构建模块和文档。变更主要涉及 prompts/ 目录下的系统提示词和用户提示词，以及 lib/ai-context-builder.ts 中 patch 处理逻辑的增强。没有引入运行时行为变更，但存在部分文件体积较大、关键词打分逻辑不够精确等可维护性问题。</p>
+      <div class="decision">建议修改后通过</div>
+    </header>
+
+    <section>
+      <h2>PR 概览</h2>
+      <div class="overview-source">
+        <div>
+          <span>来源 PR</span>
+          <strong>yuewithme/ai-pr-review-assistant #3</strong>
+        </div>
+        <div class="overview-links">
+          <a class="button-link" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3" target="_blank" rel="noreferrer">打开 PR</a>
+          <a class="button-link secondary" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files" target="_blank" rel="noreferrer">查看 Files</a>
+        </div>
+      </div>
+      <div class="grid">
+        <article class="metric"><span>作者</span><strong>yuewithme</strong><p>PR 提交者</p></article>
+        <article class="metric"><span>源分支</span><strong><a href="https://github.com/yuewithme/ai-pr-review-assistant/tree/feature/ai-review-prompt-templates" target="_blank" rel="noreferrer">feature/ai-review-prompt-templates</a></strong><p>本次变更来源</p></article>
+        <article class="metric"><span>目标分支</span><strong><a href="https://github.com/yuewithme/ai-pr-review-assistant/tree/feature/github-pr-fetch-api" target="_blank" rel="noreferrer">feature/github-pr-fetch-api</a></strong><p>本次变更合入目标</p></article>
+        <article class="metric"><span>修改文件</span><strong>19</strong><p>Changed files</p></article>
+        <article class="metric"><span>新增行数</span><strong>1231</strong><p>Additions</p></article>
+        <article class="metric"><span>删除行数</span><strong>122</strong><p>Deletions</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>变更总结</h2>
+      <div class="panel">
+        <h3>整体说明</h3>
+        <p>本次 PR 新增了 AI review 的 prompt 模板文件，并更新了相关的上下文构建模块和文档。变更主要涉及 prompts/ 目录下的系统提示词和用户提示词，以及 lib/ai-context-builder.ts 中 patch 处理逻辑的增强。没有引入运行时行为变更，但存在部分文件体积较大、关键词打分逻辑不够精确等可维护性问题。</p>
+        <h3 style="margin-top:16px;">主要变更点</h3>
+        <ul><li>新增一份完整的 PR Review HTML 报告，包含样式、布局和内容结构。</li><li>重构了上下文构建逻辑，新增 patch 处理函数（takePatchText、splitPatchHunks、scorePatchHunks），用于在 token 预算内优先保留关键 hunks。</li><li>更新了结构化分析文档，移除了 contextPolicy 内部细节，调整了文件摘要措辞。</li><li>新增 HTML 报告的用户提示模板，固定了报告布局和样式要求。</li><li>新增 prompt 设计文档，描述了分层 prompt 架构和各个 prompt 文件的作用。</li></ul>
+        <h3 style="margin-top:16px;">主要涉及模块</h3>
+        <div class="chips"><span class="chip">docs/pr-2-review-report.html</span><span class="chip">lib/ai-context-builder.ts</span><span class="chip">docs/pr-2-structured-ai-analysis.md</span><span class="chip">prompts/report-html-user.md</span><span class="chip">docs/prompt-design.md</span><span class="chip">prompts/ai-review-user.md</span><span class="chip">prompts/report-display-user.md</span><span class="chip">docs/architecture.md</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>风险概览</h2>
+      <div class="risk-bar">
+        <div class="risk-count risk-high"><strong>0</strong><span>高风险</span></div>
+        <div class="risk-count risk-medium"><strong>1</strong><span>中风险</span></div>
+        <div class="risk-count risk-low"><strong>2</strong><span>低风险</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>风险详情</h2>
+      
+      <article class="risk">
+        <header>
+          <div>
+            <h3>单文件新增 311 行，属于大变更。该文件是 HTML 报告，虽然不直接影响运行时逻辑，但较大的变更量可能增加 review 负担，且不利于后续维护。</h3>
+            <a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-0bdb35a519f74ab32ca2f7e398892401ca8871dac4bdc11d4b32de69d45db991" target="_blank" rel="noreferrer">docs/pr-2-review-report.html</a>
+          </div>
+          <span class="badge risk-medium">中风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>large-change / 大变更</dd>
+          <dt>问题</dt><dd>单文件新增 311 行，属于大变更。该文件是 HTML 报告，虽然不直接影响运行时逻辑，但较大的变更量可能增加 review 负担，且不利于后续维护。</dd>
+          <dt>依据</dt><dd><div class="evidence-block">
+            <p>patch 显示新增 311 行 HTML 代码，包含完整的报告页面结构和样式。</p>
+            <pre class="code-snippet"><code>+&lt;!doctype html&gt;\n+&lt;html lang=\&quot;zh-CN\&quot;&gt;\n+&lt;head&gt;\n+  &lt;meta charset=\&quot;utf-8\&quot; /&gt;\n+  &lt;meta name=\&quot;viewport\&quot; content=\&quot;width=device-width, initial-scale=1\&quot; /&gt;\n+  &lt;title&gt;PR Review 报告 - Add GitHub PR fetch API&lt;/title&gt;\n+  &lt;style&gt;\n+    ...\n+  &lt;/style&gt;\n+&lt;/head&gt;</code></pre>
+            <a class="evidence-link" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-0bdb35a519f74ab32ca2f7e398892401ca8871dac4bdc11d4b32de69d45db991" target="_blank" rel="noreferrer">查看该文件在 PR 中的变更</a>
+          </div></dd>
+          <dt>影响</dt><dd>可能增加审查成本和后续维护成本。</dd>
+          <dt>建议</dt><dd><p>建议将此 HTML 文件作为生成输出，而非版本控制中的静态资源。如果必须保留，考虑拆分为多个模板或引入构建流程。</p><div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              <pre class="code-snippet"><code>+&lt;!doctype html&gt;\n+&lt;html lang=\&quot;zh-CN\&quot;&gt;\n+&lt;head&gt;\n+  &lt;meta charset=\&quot;utf-8\&quot; /&gt;\n+  &lt;meta name=\&quot;viewport\&quot; content=\&quot;width=device-width, initial-scale=1\&quot; /&gt;\n+  &lt;title&gt;PR Review 报告 - Add GitHub PR fetch API&lt;/title&gt;\n+  &lt;style&gt;\n+    ...\n+  &lt;/style&gt;\n+&lt;/head&gt;</code></pre>
+            </div>
+            <div>
+              <h4>修改后</h4>
+              <p>未提供</p>
+            </div>
+          </div></dd>
+          <dt>置信度</dt><dd>0.7</dd>
+        </dl>
+      </article>
+      <article class="risk">
+        <header>
+          <div>
+            <h3>scorePatchHunk 函数中硬编码了关键词列表（如 &quot;console.log&quot;, &quot;todo&quot;, &quot;any&quot;），但该列表用于为 patch 片段打分，并非直接执行日志输出。这种设计可能导致关键词匹配过于宽泛（例如 &quot;any&quot; 会匹配自然语言中的 any 或变量名），降低评分的准确性。</h3>
+            <a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">lib/ai-context-builder.ts</a>
+          </div>
+          <span class="badge risk-low">低风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>maintainability / 可维护性</dd>
+          <dt>问题</dt><dd>scorePatchHunk 函数中硬编码了关键词列表（如 &quot;console.log&quot;, &quot;todo&quot;, &quot;any&quot;），但该列表用于为 patch 片段打分，并非直接执行日志输出。这种设计可能导致关键词匹配过于宽泛（例如 &quot;any&quot; 会匹配自然语言中的 any 或变量名），降低评分的准确性。</dd>
+          <dt>依据</dt><dd><div class="evidence-block">
+            <p>patch 中 scorePatchHunk 函数包含如下代码：`if (lowerHunk.includes(keyword)) { score += 20; }`，其中 keyword 列表包括 &quot;console.log&quot;, &quot;todo&quot;, &quot; any&quot; 等。</p>
+            <pre class="code-snippet"><code>for (const keyword of [\n    \&quot;auth\&quot;,\n    \&quot;login\&quot;,\n    \&quot;permission\&quot;,\n    \&quot;token\&quot;,\n    \&quot;middleware\&quot;,\n    \&quot;secret\&quot;,\n    \&quot;password\&quot;,\n    \&quot;console.log\&quot;,\n    \&quot;todo\&quot;,\n    \&quot; any\&quot;,\n  ]) {\n    if (lowerHunk.includes(keyword)) {\n      score += 20;\n    }\n  }</code></pre>
+            <a class="evidence-link" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">查看该文件在 PR 中的变更</a>
+          </div></dd>
+          <dt>影响</dt><dd>可能影响代码可读性、可维护性或后续修改成本。</dd>
+          <dt>建议</dt><dd><p>考虑使用正则表达式进行单词边界匹配，例如 `\bconsole\.log\b`，避免匹配注释或变量名中的子字符串。对于 &quot;any&quot;，建议匹配类型注解中的 `: any` 或 `as any` 等模式。同时，将关键词列表提取为常量，方便维护。</p><div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              <pre class="code-snippet"><code>for (const keyword of [\n    \&quot;auth\&quot;,\n    \&quot;login\&quot;,\n    \&quot;permission\&quot;,\n    \&quot;token\&quot;,\n    \&quot;middleware\&quot;,\n    \&quot;secret\&quot;,\n    \&quot;password\&quot;,\n    \&quot;console.log\&quot;,\n    \&quot;todo\&quot;,\n    \&quot; any\&quot;,\n  ]) {\n    if (lowerHunk.includes(keyword)) {\n      score += 20;\n    }\n  }</code></pre>
+            </div>
+            <div>
+              <h4>修改后</h4>
+              <pre class="code-snippet"><code>const SENSITIVE_PATTERNS = [\n  /\bauth\b/i,\n  /\blogin\b/i,\n  /\bpermission\b/i,\n  /\btoken\b/i,\n  /\bmiddleware\b/i,\n  /\bsecret\b/i,\n  /\bpassword\b/i,\n  /\bconsole\.log\b/i,\n  /\btodo\b/i,\n  /:\s*any\b/i,\n];\n\nfunction scorePatchHunk(hunk: string, ruleFindings: RuleFinding[]): number {\n  let score = 0;\n  for (const pattern of SENSITIVE_PATTERNS) {\n    if (pattern.test(hunk)) {\n      score += 20;\n    }\n  }\n  // ...\n}</code></pre>
+            </div>
+          </div></dd>
+          <dt>置信度</dt><dd>0.6</dd>
+        </dl>
+      </article>
+      <article class="risk">
+        <header>
+          <div>
+            <h3>新增的 takePatchText 函数中，类型标注不完整：参数 `ruleFindings: RuleFinding[]` 使用了 `RuleFinding` 接口，但该接口可能未在文件中定义（需检查 import）。此外，函数返回字符串，但 patch 可能为 undefined，目前没有对 undefined 进行处理。</h3>
+            <a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">lib/ai-context-builder.ts</a>
+          </div>
+          <span class="badge risk-low">低风险</span>
+        </header>
+        <dl>
+          <dt>类型</dt><dd>type-safety / 类型安全</dd>
+          <dt>问题</dt><dd>新增的 takePatchText 函数中，类型标注不完整：参数 `ruleFindings: RuleFinding[]` 使用了 `RuleFinding` 接口，但该接口可能未在文件中定义（需检查 import）。此外，函数返回字符串，但 patch 可能为 undefined，目前没有对 undefined 进行处理。</dd>
+          <dt>依据</dt><dd><div class="evidence-block">
+            <p>patch 中 `function takePatchText(patch: string, maxChars: number, label: string, ruleFindings: RuleFinding[], budget: ContextBudget): string`，但调用处 `takeBudgetedPatch` 传入的 patch 可能为 undefined（从旧函数逻辑推断）。</p>
+            <pre class="code-snippet"><code>function takePatchText(\n  patch: string,\n  maxChars: number,\n  label: string,\n  ruleFindings: RuleFinding[],\n  budget: ContextBudget,\n): string {\n  if (patch.length &lt;= maxChars) {\n    return patch;\n  }\n  // ...\n}</code></pre>
+            <a class="evidence-link" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">查看该文件在 PR 中的变更</a>
+          </div></dd>
+          <dt>影响</dt><dd>可能降低类型约束，增加运行时错误概率。</dd>
+          <dt>建议</dt><dd><p>建议明确 patch 参数类型为 `string | undefined`，并在函数开头返回空字符串或原值。同时确认 `RuleFinding` 是否已正确导入。可以添加类型守卫或默认值处理。</p><div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              <pre class="code-snippet"><code>function takePatchText(\n  patch: string,\n  maxChars: number,\n  label: string,\n  ruleFindings: RuleFinding[],\n  budget: ContextBudget,\n): string {\n  if (patch.length &lt;= maxChars) {\n    return patch;\n  }\n  // ...\n}</code></pre>
+            </div>
+            <div>
+              <h4>修改后</h4>
+              <pre class="code-snippet"><code>function takePatchText(\n  patch: string | undefined,\n  maxChars: number,\n  label: string,\n  ruleFindings: RuleFinding[],\n  budget: ContextBudget,\n): string {\n  if (!patch) {\n    return &#39;&#39;;\n  }\n  // ...\n}</code></pre>
+            </div>
+          </div></dd>
+          <dt>置信度</dt><dd>0.5</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section>
+      <h2>Review 建议</h2>
+      
+      <article class="comment">
+        <h3>maintainability</h3>
+        <a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">lib/ai-context-builder.ts</a>
+        <p>scorePatchHunks 函数中根据 hunk 的索引进行稳定排序，但使用 `left.index - right.index` 作为二级排序键，这依赖于原始数组中索引的连续性。建议使用更明确的稳定排序方式，例如保留原始顺序属性，或者使用 `index` 作为唯一键。当前实现中，如果两个 hunk 得分相同，它们会按原始顺序排列，但 `sort` 函数可能不是稳定的（取决于 JS 引擎）。为了确保一致结果，可以显式保持索引比较。</p>
+        <div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              <pre class="code-snippet"><code>.sort((left, right) =&gt; {\n      const scoreDiff = right.score - left.score;\n\n      if (scoreDiff !== 0) {\n        return scoreDiff;\n      }\n\n      return left.index - right.index;\n    })</code></pre>
+            </div>
+            <div>
+              <h4>修改后</h4>
+              <pre class="code-snippet"><code>.sort((left, right) =&gt; {\n      const scoreDiff = right.score - left.score;\n\n      if (scoreDiff !== 0) {\n        return scoreDiff;\n      }\n\n      // 使用索引确保稳定性\n      return left.index - right.index;\n    })</code></pre>
+            </div>
+          </div>
+      </article>
+      <article class="comment">
+        <h3>maintainability</h3>
+        <a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-0bdb35a519f74ab32ca2f7e398892401ca8871dac4bdc11d4b32de69d45db991" target="_blank" rel="noreferrer">docs/pr-2-review-report.html</a>
+        <p>该 HTML 文件已经很大，而且包含了完整的报告样式和结构。建议考虑将样式提取到独立的 CSS 文件，并在运行时动态生成 HTML，而不是直接在版本控制中维护静态 HTML。另外，文件路径链接使用了 `fileLinks[filePath]`，但实际渲染时可能缺少映射，建议在生成侧确保所有文件路径都有对应的链接。</p>
+        <div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              <pre class="code-snippet"><code>&lt;a href=\&quot;{{fileLinks[filePath]}}\&quot; target=\&quot;_blank\&quot; rel=\&quot;noreferrer\&quot;&gt;\n      &lt;code&gt;{{filePath}}&lt;/code&gt;\n    &lt;/a&gt;</code></pre>
+            </div>
+            <div>
+              <h4>修改后</h4>
+              <pre class="code-snippet"><code>&lt;!-- 建议使用模板引擎或函数生成链接 --&gt;\n    &lt;a href=\&quot;&lt;%= fileLinks[filePath] || \&quot;#\&quot; %&gt;\&quot; target=\&quot;_blank\&quot; rel=\&quot;noreferrer\&quot;&gt;\n      &lt;code&gt;&lt;%= filePath %&gt;&lt;/code&gt;\n    &lt;/a&gt;</code></pre>
+            </div>
+          </div>
+      </article>
+      <article class="comment">
+        <h3>maintainability</h3>
+        <a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">lib/ai-context-builder.ts</a>
+        <p>新增的 `takePatchText` 函数中，每次循环 `for (const hunk of scorePatchHunks(hunks, ruleFindings))`，`scorePatchHunks` 返回的是排序后的 hunk 数组，但该数组是重新生成的，循环中仍在迭代。逻辑上正确，但注意 `selectedHunks` 的拼接使用了 `join(&quot;\n&quot;)`，如果 hunk 本身末尾有换行，可能会导致空行。建议在拼接前 trim 掉多余的换行。</p>
+        <div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              <pre class="code-snippet"><code>selectedHunks.push(nextHunk);\n    usedChars += separatorLength + nextHunk.length;\n  }\n\n  return selectedHunks.join(\&quot;\\n\&quot;);</code></pre>
+            </div>
+            <div>
+              <h4>修改后</h4>
+              <pre class="code-snippet"><code>selectedHunks.push(nextHunk);\n    usedChars += separatorLength + nextHunk.length;\n  }\n\n  // 去除首尾多余换行\n  return selectedHunks.join(\&quot;\\n\&quot;).replace(/^\\n+|\\n+$/g, &#39;&#39;);</code></pre>
+            </div>
+          </div>
+      </article>
+    </section>
+
+    <section>
+      <h2>测试建议</h2>
+      <div class="two-col">
+        <div class="panel">
+          <h3>建议补充场景</h3>
+          <ul><li>确认新增或修改的测试覆盖本次 PR 的核心路径。</li><li>运行相关测试文件，确认现有行为没有回归。</li></ul>
+        </div>
+        <div class="panel">
+          <h3>重点边界条件</h3>
+          <ul><li>异常输入、空数据和边界参数。</li></ul>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:12px;">
+        <strong>测试缺失风险：</strong>未发现明显测试缺失风险
+      </div>
+    </section>
+
+    <section>
+      <h2>文件级变更摘要</h2>
+      <div class="file-list">
+        <div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-0bdb35a519f74ab32ca2f7e398892401ca8871dac4bdc11d4b32de69d45db991" target="_blank" rel="noreferrer">docs/pr-2-review-report.html</a><p>新增一份完整的 PR Review HTML 报告，包含样式、布局和内容结构。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-4c6f0ee00c47da79c052c95899fa05147615760735f078ae34e91675b2918f7c" target="_blank" rel="noreferrer">lib/ai-context-builder.ts</a><p>重构了上下文构建逻辑，新增 patch 处理函数（takePatchText、splitPatchHunks、scorePatchHunks），用于在 token 预算内优先保留关键 hunks。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-9194607b75dd88ea0434d1482459ab01b713d247287ec62968ecdec4a9b00453" target="_blank" rel="noreferrer">docs/pr-2-structured-ai-analysis.md</a><p>更新了结构化分析文档，移除了 contextPolicy 内部细节，调整了文件摘要措辞。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-936d1ac5699c621ed706484c195b3df4eba8d7a307e1d00a66212b7b8f32d662" target="_blank" rel="noreferrer">prompts/report-html-user.md</a><p>新增 HTML 报告的用户提示模板，固定了报告布局和样式要求。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-cd1badf82efe148d9a21bb4ab24ef1f38efff7712361147a689f3970a4a15307" target="_blank" rel="noreferrer">docs/prompt-design.md</a><p>新增 prompt 设计文档，描述了分层 prompt 架构和各个 prompt 文件的作用。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-251bfb14ba8a6b454bb32d25d01fc102103e45f199b1daa79a494c18387170c1" target="_blank" rel="noreferrer">prompts/ai-review-user.md</a><p>新增 AI review 用户提示模板，定义了分析任务的输入输出规则。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-ca32f2a985bac8f655f2bc3722c11f1886dfba30a4823a0dc3fe876b6718e616" target="_blank" rel="noreferrer">prompts/report-display-user.md</a><p>新增报告展示的用户提示模板，定义了展示层数据结构的转换规则。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-140eef3ba41bdcf401d507408084181f2c0ac627532b61e0f7906ea7cc926782" target="_blank" rel="noreferrer">docs/architecture.md</a><p>更新架构文档，可能反映了 prompt 分层的变化。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-941539736a470e6a8d13af6e3b1c16e50a3ad5d8c5bcd71711c9551dfa0482a5" target="_blank" rel="noreferrer">prompts/ai-review-system.md</a><p>新增 AI review 系统提示模板，定义了 reviewer 角色和证据规则。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-2a13a1fadb3900ab308931e08922f5e2790e48535da4a831753ddb3a3f080316" target="_blank" rel="noreferrer">lib/ai-review.ts</a><p>修改了 AI review 模块，可能调整了 prompt 调用或分析逻辑。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-cd168b9924b2ab2050f569253c525f13ed3ee8ec93acca0674f8e39b1a91f88f" target="_blank" rel="noreferrer">tests/ai-context-builder.test.ts</a><p>新增了针对 patch 处理函数的测试用例。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-0b5ca119d2be595aa307d34512d9679e49186307ef94201e4b3dfa079aa89938" target="_blank" rel="noreferrer">docs/README.md</a><p>新增文档说明。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5" target="_blank" rel="noreferrer">README.md</a><p>更新了项目根目录的 README，可能添加了 prompt 使用说明。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-ae20a42564a487f8c9fa03b7e82b6a54834243c8aeb3c88e861af020ceef1546" target="_blank" rel="noreferrer">prompts/report-html-system.md</a><p>新增 HTML 报告的系统提示模板。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-3449336cbb2c2659ad9ba68ee3a3712eacd5d2dd708ca98fa03d6002b94cb548" target="_blank" rel="noreferrer">prompts/report-display-system.md</a><p>新增报告展示的系统提示模板。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-1ba29fc2d7c16676d6475f0863a554cd257e0a9c51d9fa0493dc43152bfe7d1e" target="_blank" rel="noreferrer">lib/mock-analysis.ts</a><p>微调了 mock 分析实现。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-dc0bc62051837de0f09f280fd45685eb1b1498dfc51f544a820b1bebc8f73ae4" target="_blank" rel="noreferrer">tests/ai-review.test.ts</a><p>更新了 AI review 的测试用例。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-a56a0c7be1fd83f95c28bed8881828b9e60058c82f6de6ffcad6629b13b1d7d1" target="_blank" rel="noreferrer">docs/data-mapping.md</a><p>更新了数据映射文档。</p></div><div class="file-row"><a class="path" href="https://github.com/yuewithme/ai-pr-review-assistant/pull/3/files#diff-54c810cb5f642945aedd09060d2dfd3c931b3bc345ac330ae57bf714b42db6f7" target="_blank" rel="noreferrer">tests/mock-analysis.test.ts</a><p>更新了 mock 分析的测试。</p></div>
+      </div>
+    </section>
+
+    <p class="footer">本报告由 AI PR Review Assistant 生成，请结合人工审查判断。</p>
+  </main>
+</body>
+</html>
