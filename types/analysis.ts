@@ -28,12 +28,14 @@ export type AnalysisRisk = {
   evidence: string;
   codeSnippet?: string;
   suggestion: string;
+  suggestedCode?: string;
   confidence: number;
 };
 
 export type ReviewSuggestion = {
   filePath: string;
   message: string;
+  currentCode?: string;
   suggestedCode?: string;
 };
 

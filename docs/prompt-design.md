@@ -51,7 +51,8 @@ Analysis output must stay evidence-based:
 - Risk descriptions and evidence must not duplicate each other. The description states the issue; evidence explains the concrete basis from patch, rule finding, metadata, or context.
 - When possible, risk output should include a `codeSnippet` copied from `changedFiles.patch`. If no concrete snippet exists, use an empty string instead of inventing code.
 - Suggestions should be actionable for humans: what to change, what to test, and what boundary to confirm.
-- Review suggestions may include `suggestedCode` when there is enough context to show a concrete code or test change. If the suggestion only asks for human confirmation, keep `suggestedCode` empty.
+- Risks may include `suggestedCode` when there is enough context to show a concrete fix in the risk detail suggestion field.
+- Review suggestions may include `currentCode` and `suggestedCode` when there is enough context to show a before/after code or test change. If the suggestion only asks for human confirmation, keep both fields empty.
 
 ## Display Prompt Contract
 
@@ -85,10 +86,11 @@ Risk details should show:
 - Problem code: `risk.codeSnippet`, when available.
 - Link: file name or “查看该文件在 PR 中的变更” should jump to the PR Files view for that file.
 - Suggestion: detailed enough for the author to act on.
+- Suggestion code comparison: use `risk.codeSnippet` as before code and `risk.suggestedCode` as after code when available.
 
 Review suggestions may additionally show:
 
-- Suggested code: `suggestion.suggestedCode`, when available, under the matching review comment.
+- Code comparison: `suggestion.currentCode` and `suggestion.suggestedCode`, when available, under the matching review comment.
 
 Risk types must be displayed in English and Chinese, for example:
 

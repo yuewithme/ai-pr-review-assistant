@@ -25,4 +25,6 @@
 
 16. 修改建议必须面向人类 reviewer 或代码作者，尽量说明具体改法、补充测试、验证方式或需要人工确认的边界。
 
-17. 如果 Review 建议中存在 `suggestedCode`，必须在建议正文下方展示“建议修改后的代码”代码块；没有 `suggestedCode` 时不要占位。
+17. 如果风险项中存在 `risk.suggestedCode`，必须在风险详情的“建议”字段内展示“修改前 / 修改后”代码对比；修改前优先使用 `risk.codeSnippet`。
+
+18. 如果 Review 建议中存在 `currentCode` 或 `suggestedCode`，必须在建议正文下方展示“修改前 / 修改后”代码对比；没有代码时不要占位。

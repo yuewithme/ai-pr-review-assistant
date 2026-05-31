@@ -29,6 +29,7 @@ const result: AnalysisResult = {
       evidence: "patch 中新增了环境变量示例占位符。",
       codeSnippet: "+DEEPSEEK_API_KEY=your_deepseek_api_key",
       suggestion: "请确认示例文件只包含占位符，并在提交前检查不会把真实密钥写入版本控制。",
+      suggestedCode: "DEEPSEEK_API_KEY=your_deepseek_api_key",
       confidence: 0.4,
     },
   ],
@@ -36,6 +37,7 @@ const result: AnalysisResult = {
     {
       filePath: "lib/parser.ts",
       message: "Add parser edge case tests.",
+      currentCode: "// missing invalid JSON test",
       suggestedCode: "test('rejects invalid JSON request body', async () => {\n  // assert 400 INVALID_JSON\n});",
     },
   ],
@@ -59,8 +61,12 @@ test("renderPrReviewHtmlReport returns the fixed HTML report shape", () => {
   assert.match(html, /Add parser/);
   assert.match(html, /风险详情/);
   assert.match(html, /Review 建议/);
-  assert.match(html, /建议修改后的代码/);
+  assert.match(html, /代码修改对比/);
+  assert.match(html, /修改前/);
+  assert.match(html, /修改后/);
+  assert.match(html, /missing invalid JSON test/);
   assert.match(html, /rejects invalid JSON request body/);
+  assert.match(html, /DEEPSEEK_API_KEY=your_deepseek_api_key/);
   assert.match(html, /文件级变更摘要/);
   assert.match(html, /security \/ 安全/);
   assert.match(html, /patch 中新增了环境变量示例占位符/);

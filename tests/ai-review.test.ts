@@ -66,6 +66,7 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
                     evidence: "patch 中新增了 token 存在时直接返回 true 的判断。",
                     codeSnippet: "+ if (token) return true",
                     suggestion: "请补充 token 缺失、无效 token 和有效 token 的回归测试，确认鉴权分支符合预期。",
+                    suggestedCode: "+ if (isValidToken(token)) return true",
                     confidence: 0.82,
                   },
                 ],
@@ -73,6 +74,7 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
                   {
                     filePath: "src/auth/middleware.ts",
                     message: "Could you add a regression test for invalid token handling?",
+                    currentCode: "+ if (token) return true",
                     suggestedCode:
                       "test('rejects invalid token', async () => {\n  expect(checkAuth('bad-token')).toBe(false);\n});",
                   },
@@ -108,6 +110,8 @@ test("analyzePullRequest returns structured AI JSON with stable metadata", async
   assert.equal(result.risks[0].filePath, "src/auth/middleware.ts");
   assert.equal(result.risks[0].evidence, "patch 中新增了 token 存在时直接返回 true 的判断。");
   assert.equal(result.risks[0].codeSnippet, "+ if (token) return true");
+  assert.equal(result.risks[0].suggestedCode, "+ if (isValidToken(token)) return true");
+  assert.equal(result.reviewSuggestions[0].currentCode, "+ if (token) return true");
   assert.match(result.reviewSuggestions[0].suggestedCode || "", /rejects invalid token/);
   assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
   assert.match(requestBody, /只返回严格 JSON/);

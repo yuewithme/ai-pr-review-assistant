@@ -31,6 +31,7 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
       "evidence": "string",
       "codeSnippet": "string",
       "suggestion": "string",
+      "suggestedCode": "string",
       "confidence": 0.0
     }
   ],
@@ -38,6 +39,7 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
     {
       "filePath": "string",
       "message": "string",
+      "currentCode": "string",
       "suggestedCode": "string"
     }
   ],
@@ -66,9 +68,10 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
 12. risk.message 说明“问题是什么”，risk.evidence 说明“从哪段 diff 或规则线索看出来”，两者不能写成同一句话。
 13. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
 14. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的点，不能只写“建议优化”。
-15. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，返回空字符串。
-16. reviewSuggestions.suggestedCode 要和同一文件的风险或建议对应，代码可以是精简片段，不要编造不存在的 API。
-17. 语言要简洁。`;
+15. 如果 risk.suggestion 有明确代码改法，risk.suggestedCode 必须给出修改后代码；如果只能人工确认，返回空字符串。
+16. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.currentCode 必须给出当前相关代码，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，两个字段返回空字符串。
+17. currentCode、codeSnippet 和 suggestedCode 要能形成“修改前 / 修改后”对比，优先基于 changedFiles.patch 中已有代码改写，不要编造不存在的 API。
+18. 语言要简洁。`;
 
 type AnalyzePullRequestInput = {
   prInfo: PrInfo;
@@ -250,6 +253,8 @@ function normalizeRisks(
         codeSnippet:
           typeof candidate.codeSnippet === "string" ? candidate.codeSnippet : "",
         suggestion: candidate.suggestion,
+        suggestedCode:
+          typeof candidate.suggestedCode === "string" ? candidate.suggestedCode : "",
         confidence: clampConfidence(candidate.confidence),
       },
     ];
@@ -283,6 +288,8 @@ function normalizeReviewSuggestions(
       {
         filePath: candidate.filePath,
         message: candidate.message,
+        currentCode:
+          typeof candidate.currentCode === "string" ? candidate.currentCode : "",
         suggestedCode:
           typeof candidate.suggestedCode === "string" ? candidate.suggestedCode : "",
       },

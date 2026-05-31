@@ -123,8 +123,8 @@ export function renderPrReviewHtmlReport(result: AnalysisResult): string {
     .evidence-link:hover { text-decoration: underline; }
     .comment { padding: 14px 16px; margin-top: 10px; }
     .comment p { margin-top: 6px; }
-    .suggested-code { margin-top: 12px; }
-    .suggested-code h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+    .code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .code-compare h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
     .file-list { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
     .file-row { display: grid; grid-template-columns: minmax(220px, 32%) 1fr; gap: 14px; align-items: start; padding: 10px 14px; border-top: 1px solid var(--line); }
     .file-row:first-child { border-top: 0; }
@@ -140,6 +140,7 @@ export function renderPrReviewHtmlReport(result: AnalysisResult): string {
       .risk header { display: block; }
       .badge { margin-top: 10px; }
       .risk dl { grid-template-columns: 1fr; }
+      .code-compare { grid-template-columns: 1fr; }
       .file-row { grid-template-columns: 1fr; gap: 6px; }
     }
   </style>
@@ -271,7 +272,7 @@ function renderRisk(risk: AnalysisRisk, filesUrl: string): string {
           <dt>问题</dt><dd>${escapeHtml(risk.message)}</dd>
           <dt>依据</dt><dd>${renderEvidence(risk, fileUrl)}</dd>
           <dt>影响</dt><dd>${escapeHtml(inferImpact(risk))}</dd>
-          <dt>建议</dt><dd>${escapeHtml(risk.suggestion)}</dd>
+          <dt>建议</dt><dd><p>${escapeHtml(risk.suggestion)}</p>${renderCodeComparison(risk.codeSnippet, risk.suggestedCode)}</dd>
           <dt>置信度</dt><dd>${escapeHtml(String(risk.confidence))}</dd>
         </dl>
       </article>`;
@@ -292,19 +293,34 @@ function renderSuggestion(
   filesUrl: string,
 ): string {
   const type = inferSuggestionType(suggestion.message);
-  const suggestedCode = suggestion.suggestedCode?.trim();
 
   return `
       <article class="comment">
         <h3>${escapeHtml(type)}</h3>
         ${renderLink(suggestion.filePath, buildFileDiffUrl(filesUrl, suggestion.filePath), "path")}
         <p>${escapeHtml(suggestion.message)}</p>
-        ${
-          suggestedCode
-            ? `<div class="suggested-code"><h4>建议修改后的代码</h4><pre class="code-snippet"><code>${escapeHtml(suggestedCode)}</code></pre></div>`
-            : ""
-        }
+        ${renderCodeComparison(suggestion.currentCode, suggestion.suggestedCode)}
       </article>`;
+}
+
+function renderCodeComparison(beforeCode?: string, afterCode?: string): string {
+  const before = beforeCode?.trim();
+  const after = afterCode?.trim();
+
+  if (!before && !after) {
+    return "";
+  }
+
+  return `<div class="code-compare" aria-label="代码修改对比">
+            <div>
+              <h4>修改前</h4>
+              ${before ? `<pre class="code-snippet"><code>${escapeHtml(before)}</code></pre>` : "<p>未提供</p>"}
+            </div>
+            <div>
+              <h4>修改后</h4>
+              ${after ? `<pre class="code-snippet"><code>${escapeHtml(after)}</code></pre>` : "<p>未提供</p>"}
+            </div>
+          </div>`;
 }
 
 function renderFileSummary(file: FileSummary, filesUrl: string): string {

@@ -42,8 +42,9 @@
     "风险的问题描述和依据不能重复；description 写问题，evidence 写证据来源和判断依据",
     "codeSnippet 优先摘录 changedFiles.patch 中最相关的新增或修改代码；没有明确代码时返回空字符串",
     "suggestion 必须详细到 reviewer 或作者知道下一步怎么改、补什么测试、确认什么边界",
-    "reviewSuggestions.suggestedCode 用于展示建议修改后的代码；有明确改法或测试补充时必须给出精简代码片段，只能人工确认时返回空字符串",
-    "suggestedCode 必须和同一条 review suggestion 对应，优先基于 patch 中已有代码改写，不要编造不存在的 API",
+    "risk.suggestedCode 用于在风险详情的建议字段展示修改后代码；有明确改法时必须给出精简代码片段，只能人工确认时返回空字符串",
+    "reviewSuggestions.currentCode 和 reviewSuggestions.suggestedCode 用于展示修改前后对比；有明确改法或测试补充时必须同时给出，只能人工确认时返回空字符串",
+    "currentCode、codeSnippet 和 suggestedCode 必须能互相对应，优先基于 patch 中已有代码改写，不要编造不存在的 API",
     "JSON 字符串不要包含未转义的反斜杠；如果需要描述正则表达式，请优先用自然语言描述"
   ],
   "outputSchema": {
@@ -79,6 +80,7 @@
         "evidenceSource": "patch | ruleFinding | metadata | context | mixed",
         "impact": "string",
         "suggestion": "string",
+        "suggestedCode": "string",
         "confidence": 0.0,
         "requiresHumanCheck": false
       }
@@ -88,6 +90,7 @@
         "filePath": "string",
         "type": "bug-risk | test | refactor | security | requirement-confirmation | maintainability",
         "comment": "string",
+        "currentCode": "string",
         "suggestedCode": "string"
       }
     ],
