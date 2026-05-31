@@ -140,7 +140,7 @@ li.error {
 
 .history-item {
   display: grid;
-  gap: 2px;
+  gap: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
 }
@@ -152,5 +152,21 @@ li.error {
 
 .history-item strong {
   color: var(--text);
+}
+
+.history-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.history-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.history-actions button {
+  padding: 6px 8px;
+  font-size: 12px;
 }
 

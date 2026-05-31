@@ -80,3 +80,15 @@ test("extension report viewer restores history reports from local storage", asyn
   assert.match(popup, /loadStoredReport/);
   assert.match(popup, /recentReports/);
 });
+
+test("extension history can download a selected report with title-based filename", async () => {
+  const popup = await readFile("extension/popup.js", "utf-8");
+  const popupCss = await readFile("extension/popup.css", "utf-8");
+
+  assert.match(popup, /downloadReport\(currentReport\)/);
+  assert.match(popup, /async function downloadReport\(report\)/);
+  assert.match(popup, /filename: `\$\{safeFilename\(report\.title\)\}\.html`/);
+  assert.match(popup, /history-actions/);
+  assert.match(popup, /下载/);
+  assert.match(popupCss, /\.history-actions/);
+});

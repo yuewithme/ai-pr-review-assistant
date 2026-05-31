@@ -164,14 +164,20 @@ async function downloadCurrentReport() {
     return;
   }
 
-  const blob = new Blob([currentReport.html], { type: "text/html;charset=utf-8" });
+  await downloadReport(currentReport);
+}
+
+async function downloadReport(report) {
+  const blob = new Blob([report.html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
 
   await chrome.downloads.download({
     url,
-    filename: `${safeFilename(currentReport.title)}.html`,
+    filename: `${safeFilename(report.title)}.html`,
     saveAs: true,
   });
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function copyCurrentReviewSuggestions() {
@@ -200,15 +206,36 @@ async function renderHistory() {
   historyList.textContent = "";
 
   for (const report of recentReports) {
-    const item = document.createElement("button");
+    const item = document.createElement("article");
     item.className = "history-item";
-    item.type = "button";
-    item.innerHTML = `<strong>${escapeHtml(report.title)}</strong><span>${escapeHtml(report.prUrl)}</span>`;
-    item.addEventListener("click", async () => {
+    item.innerHTML = `
+      <div class="history-meta">
+        <strong>${escapeHtml(report.title)}</strong>
+        <span>${escapeHtml(report.prUrl)}</span>
+      </div>
+      <div class="history-actions">
+        <button type="button" data-action="open">打开</button>
+        <button type="button" data-action="download">下载</button>
+      </div>`;
+
+    item.querySelector('[data-action="open"]').addEventListener("click", async () => {
       currentReport = await loadSessionReport(report.analysisId);
       await openReport(report.analysisId);
       setActionButtons(Boolean(currentReport));
     });
+
+    item.querySelector('[data-action="download"]').addEventListener("click", async () => {
+      const selectedReport = await loadSessionReport(report.analysisId);
+
+      if (!selectedReport) {
+        setStatus("这份历史报告已过期，请重新分析 PR", "error");
+        return;
+      }
+
+      await downloadReport(selectedReport);
+      setStatus(`已下载 ${selectedReport.title}`);
+    });
+
     historyList.append(item);
   }
 }
@@ -294,7 +321,7 @@ function extractReviewSuggestions(html) {
 }
 
 function safeFilename(value) {
-  return value.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80) || "pr-review-report";
+  return value.replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim() || "pr-review-report";
 }
 
 function escapeHtml(value) {
