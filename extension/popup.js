@@ -12,7 +12,7 @@ let currentReport = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await autofillCurrentPrUrl();
-  await restoreCurrentTask();
+  await restoreCurrentTask({ preserveInput: true });
   await renderHistory();
 
   analyzeButton.addEventListener("click", analyzeCurrentPr);
@@ -70,7 +70,7 @@ async function analyzeCurrentPr() {
       throw new Error(result?.error || "生成报告失败");
     }
 
-    await restoreCurrentTask();
+    await restoreCurrentTask({ preserveInput: true });
     await renderHistory();
   } catch (error) {
     const message = error instanceof Error ? error.message : "生成报告失败";
@@ -80,7 +80,7 @@ async function analyzeCurrentPr() {
   }
 }
 
-async function restoreCurrentTask() {
+async function restoreCurrentTask(options = {}) {
   const { [CURRENT_TASK_KEY]: task } = await chrome.storage.session.get([
     CURRENT_TASK_KEY,
   ]);
@@ -89,12 +89,18 @@ async function restoreCurrentTask() {
     return;
   }
 
-  await applyTaskState(task);
+  await applyTaskState(task, options);
 }
 
-async function applyTaskState(task) {
+async function applyTaskState(task, options = {}) {
   resetSteps();
-  prUrlInput.value = task.prUrl || prUrlInput.value;
+  if (!options.preserveInput) {
+    const taskPrUrl = task.prUrl || "";
+
+    if (taskPrUrl) {
+      prUrlInput.value = taskPrUrl;
+    }
+  }
   setStep(task.step || "parse");
   setStatus(task.message || "恢复上次分析状态", task.status === "failed" ? "error" : "normal");
 

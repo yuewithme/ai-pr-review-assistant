@@ -46,6 +46,15 @@ test("extension popup recognizes GitHub PR URLs and delegates analysis to backgr
   assert.doesNotMatch(popupHtml, /backendUrlInput/);
 });
 
+test("extension popup does not restore old task URL over the current tab URL", async () => {
+  const popup = await readFile("extension/popup.js", "utf-8");
+
+  assert.match(popup, /restoreCurrentTask\(\{ preserveInput: true \}\)/);
+  assert.match(popup, /async function applyTaskState\(task, options = \{\}\)/);
+  assert.match(popup, /if \(!options\.preserveInput\)/);
+  assert.doesNotMatch(popup, /prUrlInput\.value = task\.prUrl \|\| prUrlInput\.value/);
+});
+
 test("extension background owns long running report generation state", async () => {
   const background = await readFile("extension/background.js", "utf-8");
 
