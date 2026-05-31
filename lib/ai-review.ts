@@ -24,7 +24,7 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
   "summary": "string",
   "risks": [
     {
-      "type": "permission | dependency | security | test-missing | large-change | maintainability | type-safety",
+      "type": "permission | dependency | security | test-missing | maintainability | type-safety",
       "level": "low | medium | high",
       "filePath": "string",
       "message": "string",
@@ -62,16 +62,17 @@ const SYSTEM_PROMPT = `你是一名资深代码审查专家。请只基于提供
 6. rule precheck findings 只是分析线索，不是最终风险结论。
 7. 如果证据较弱，优先输出 medium 或 low 风险；也可以用 review 建议提出人工确认，不要强行断言风险。
 8. fileSummaries 必须基于 changed files 生成。
-9. 除以下内容外，所有可见解释性文本必须使用中文：文件路径、代码标识符、函数名、变量名、包名、分支名、PR 标题、risk type 枚举值、status 枚举值、TypeScript、GitHub、API、JSON、diff、patch、token 等技术名词。
-10. 如果输入中的 ruleFindings、patch 注释或上下文字段是英文，不要原样照抄成风险描述；请在保留必要技术名词的前提下转写为自然中文。
-11. summary、risk.message、risk.suggestion、reviewSuggestions.message、fileSummaries.summary 必须是中文表达。
-12. risk.message 说明“问题是什么”，risk.evidence 说明“从哪段 diff 或规则线索看出来”，两者不能写成同一句话。
-13. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
-14. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的点，不能只写“建议优化”。
-15. 如果 risk.suggestion 有明确代码改法，risk.suggestedCode 必须给出修改后代码；如果只能人工确认，返回空字符串。
-16. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.currentCode 必须给出当前相关代码，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，两个字段返回空字符串。
-17. currentCode、codeSnippet 和 suggestedCode 要能形成“修改前 / 修改后”对比，优先基于 changedFiles.patch 中已有代码改写，不要编造不存在的 API。
-18. 语言要简洁。`;
+9. 单个文件变更超过 300 行只表示 review 负担较高，不视为风险。不要仅因为 ruleFindings 中存在 large-change 就输出风险；只有 diff 中存在明确功能、安全、测试或维护性证据时，才用对应风险类型输出。
+10. 除以下内容外，所有可见解释性文本必须使用中文：文件路径、代码标识符、函数名、变量名、包名、分支名、PR 标题、risk type 枚举值、status 枚举值、TypeScript、GitHub、API、JSON、diff、patch、token 等技术名词。
+11. 如果输入中的 ruleFindings、patch 注释或上下文字段是英文，不要原样照抄成风险描述；请在保留必要技术名词的前提下转写为自然中文。
+12. summary、risk.message、risk.suggestion、reviewSuggestions.message、fileSummaries.summary 必须是中文表达。
+13. risk.message 说明“问题是什么”，risk.evidence 说明“从哪段 diff 或规则线索看出来”，两者不能写成同一句话。
+14. risk.codeSnippet 必须优先摘录 changedFiles.patch 中最相关的新增或修改代码片段；如果没有明确代码片段，返回空字符串。
+15. risk.suggestion 必须写给人看，包含具体改法、建议补充的测试或需要确认的点，不能只写“建议优化”。
+16. 如果 risk.suggestion 有明确代码改法，risk.suggestedCode 必须给出修改后代码；如果只能人工确认，返回空字符串。
+17. 如果 reviewSuggestions.message 提出具体代码修改或测试补充，reviewSuggestions.currentCode 必须给出当前相关代码，reviewSuggestions.suggestedCode 必须给出可参考的修改后代码；如果只能人工确认，两个字段返回空字符串。
+18. currentCode、codeSnippet 和 suggestedCode 要能形成“修改前 / 修改后”对比，优先基于 changedFiles.patch 中已有代码改写，不要编造不存在的 API。
+19. 语言要简洁。`;
 
 type AnalyzePullRequestInput = {
   prInfo: PrInfo;

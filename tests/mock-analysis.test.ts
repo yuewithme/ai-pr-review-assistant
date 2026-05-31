@@ -38,6 +38,12 @@ const ruleFindings: RuleFinding[] = [
     filePath: "src/auth/login.ts",
     message: "Permission-sensitive path changed; use this as an AI analysis reference, not a final risk conclusion.",
   },
+  {
+    type: "large-change",
+    level: "medium",
+    filePath: "src/auth/login.ts",
+    message: "Single file change exceeds 300 lines; use this as an AI analysis reference, not a final risk conclusion.",
+  },
 ];
 
 test("mockAnalysisResult returns a stable analysis result from real changed files", () => {
@@ -57,6 +63,7 @@ test("mockAnalysisResult returns a stable analysis result from real changed file
   });
   assert.equal(result.risks.length, 1);
   assert.equal(result.risks[0].type, "permission");
+  assert.ok(result.risks.every((risk) => risk.type !== "large-change"));
   assert.equal(result.risks[0].confidence, 0.6);
   assert.match(result.risks[0].message, /规则预检测/);
   assert.match(result.risks[0].evidence, /来源于规则预检测/);

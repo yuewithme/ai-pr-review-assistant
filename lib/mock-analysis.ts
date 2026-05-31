@@ -12,12 +12,14 @@ export function mockAnalysisResult(
   ruleFindings: RuleFinding[],
 ): AnalysisResult {
   const fileSummaries = prData.files.map(createFileSummary);
-  const risks = ruleFindings.map((finding) =>
-    createRiskFromRuleFinding(
-      finding,
-      prData.files.find((file) => file.filename === finding.filePath),
-    ),
-  );
+  const risks = ruleFindings
+    .filter((finding) => finding.type !== "large-change")
+    .map((finding) =>
+      createRiskFromRuleFinding(
+        finding,
+        prData.files.find((file) => file.filename === finding.filePath),
+      ),
+    );
 
   return {
     analysisId: createAnalysisId(prData.pr.url),

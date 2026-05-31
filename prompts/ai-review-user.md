@@ -35,6 +35,7 @@
     "risk.evidenceSource 必须说明证据来源",
     "如果风险需要人工确认，requiresHumanCheck 必须为 true",
     "如果判断主要来自 ruleFindings，风险等级最高只能为 low 或 medium，并在 evidence 中说明来源于规则预检测",
+    "large-change 只表示单个文件变更较大，不视为风险；不要仅因为文件变更超过 300 行就输出 risk",
     "不要对正则表达式、框架行为、API 行为做未验证推断；证据不足时写当前上下文不足，需要人工确认",
     "被截断文件的问题优先放入 openQuestions 或 limitations",
     "mainModules 优先使用目录、文件路径或模块边界，不要只写抽象业务名称",
