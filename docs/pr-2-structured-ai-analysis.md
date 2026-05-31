@@ -20,7 +20,7 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
 
 - 本次分析使用真实 DeepSeek V4 Flash 返回结果。
 - 输出目标是结构化 JSON，不是 Markdown 报告。
-- 结果可继续交给后续 `report-renderer` 展开成前端报告页、CLI 报告或 GitHub 评论。
+- 结果可继续交给后续 `report-renderer` 展开成HTML 报告或前端报告页。
 - 本文档不包含任何 API Key。
 
 ## 输入概况
@@ -30,31 +30,9 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
   "sourcePr": "https://github.com/yuewithme/ai-pr-review-assistant/pull/2",
   "changedFileCount": 21,
   "ruleFindingCount": 12,
-  "contextPolicy": {
-    "maxPatchCharsPerFile": 4000,
-    "maxContextCharsPerFile": 2000,
-    "maxTotalChars": 20000,
-    "truncated": true,
-    "truncatedItems": [
-      "changedFiles.docs/pr-2-real-ai-test-report.md.patch",
-      "changedFiles.lib/ai-review.ts.patch",
-      "changedFiles.lib/github.ts.patch",
-      "changedFiles.lib/ai-context-builder.ts.patch",
-      "changedFiles.tests/ai-review.test.ts.patch",
-      "changedFiles.tests/github-fetch.test.ts.patch",
-      "changedFiles.tests/ai-context-builder.test.ts.patch",
-      "changedFiles.lib/mock-analysis.ts.patch",
-      "changedFiles.tests/pr-fetch-route.test.ts.patch",
-      "changedFiles.tests/mock-analysis.test.ts.patch",
-      "changedFiles.app/api/pr/analyze/route.ts.patch",
-      "changedFiles.types/analysis.ts.patch",
-      "changedFiles.app/api/pr/fetch/route.ts.patch",
-      "changedFiles.types/ai-context.ts.patch",
-      "changedFiles.types/github.ts.patch",
-      "changedFiles.docs/data-mapping.md.patch",
-      "changedFiles..gitignore.patch",
-      "contextFiles.README.md"
-    ]
+  "contextStrategy": {
+    "mode": "silent-budgeted-context",
+    "note": "Context budget decisions are internal and should not appear in the final report."
   }
 }
 ```
@@ -124,15 +102,15 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       },
       {
         "filePath": "tests/ai-review.test.ts",
-        "summary": "ai-review 模块的单元测试（内容截断）"
+        "summary": "ai-review 模块的单元测试"
       },
       {
         "filePath": "tests/github-fetch.test.ts",
-        "summary": "GitHub fetch 功能的单元测试（内容截断）"
+        "summary": "GitHub fetch 功能的单元测试"
       },
       {
         "filePath": "tests/ai-context-builder.test.ts",
-        "summary": "ai-context-builder 的单元测试（内容截断）"
+        "summary": "ai-context-builder 的单元测试"
       },
       {
         "filePath": "lib/mock-analysis.ts",
@@ -140,39 +118,39 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       },
       {
         "filePath": "tests/pr-fetch-route.test.ts",
-        "summary": "POST /api/pr/fetch 路由的测试（内容截断）"
+        "summary": "POST /api/pr/fetch 路由的测试"
       },
       {
         "filePath": "tests/mock-analysis.test.ts",
-        "summary": "mock-analysis 的单元测试（内容截断）"
+        "summary": "mock-analysis 的单元测试"
       },
       {
         "filePath": "app/api/pr/analyze/route.ts",
-        "summary": "/api/pr/analyze 的路由处理器（内容截断）"
+        "summary": "/api/pr/analyze 的路由处理器"
       },
       {
         "filePath": "types/analysis.ts",
-        "summary": "分析相关类型定义（内容截断）"
+        "summary": "分析相关类型定义"
       },
       {
         "filePath": "app/api/pr/fetch/route.ts",
-        "summary": "/api/pr/fetch 的路由处理器（内容截断）"
+        "summary": "/api/pr/fetch 的路由处理器"
       },
       {
         "filePath": "types/ai-context.ts",
-        "summary": "AI 上下文数据类型定义（内容截断）"
+        "summary": "AI 上下文数据类型定义"
       },
       {
         "filePath": "types/github.ts",
-        "summary": "扩展了 GitHub 相关类型，添加了额外字段（内容截断）"
+        "summary": "扩展了 GitHub 相关类型，添加了额外字段"
       },
       {
         "filePath": "docs/data-mapping.md",
-        "summary": "数据映射文档（内容截断）"
+        "summary": "数据映射文档"
       },
       {
         "filePath": ".gitignore",
-        "summary": "修改了 .gitignore 文件（内容截断）"
+        "summary": "修改了 .gitignore 文件"
       }
     ]
   },
@@ -181,7 +159,6 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       "level": "low",
       "type": "security",
       "filePath": ".env.example",
-      "position": "未提供",
       "description": "环境变量示例文件包含 DEEPSEEK_API_KEY 占位符，需确保真实密钥不会提交到版本控制。",
       "evidence": "文件内容仅有一行：DEEPSEEK_API_KEY=your_deepseek_api_key",
       "impact": "如果误将真实密钥写入此文件并提交，可能导致密钥泄露。",
@@ -192,7 +169,6 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       "level": "medium",
       "type": "maintainability",
       "filePath": "lib/rule-checker.ts",
-      "position": "未提供",
       "description": "规则检查中的 any 检测正则表达式可能误匹配单词内包含 any 的字符串，例如 company，导致误报。",
       "evidence": "代码中使用单词边界匹配 any 来检测 any 类型。",
       "impact": "可能产生不准确的 type-safety 规则预检结果，误导后续 AI 分析。",
@@ -203,9 +179,8 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       "level": "medium",
       "type": "maintainability",
       "filePath": "lib/ai-review.ts",
-      "position": "未提供",
-      "description": "文件长度 357 行，超过 300 行的审查阈值，可能影响可读性和维护性。由于上下文截断，无法判断是否适合拆分。",
-      "evidence": "changedFiles 显示该文件增加了 357 行，且 patch 被截断。",
+      "description": "文件长度 357 行，超过 300 行的审查阈值，可能影响可读性和维护性。",
+      "evidence": "changedFiles 显示该文件增加了 357 行。",
       "impact": "后续修改可能增加认知负担，且难以单独测试各部分逻辑。",
       "suggestion": "建议人工复查，考虑将 prompt 构建、API 调用、结果解析拆分为独立模块。",
       "confidence": 0.6
@@ -214,9 +189,8 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       "level": "medium",
       "type": "compatibility",
       "filePath": "lib/github.ts",
-      "position": "未提供",
       "description": "GitHub API 文件列表可能分页，当前代码未见分页处理逻辑，可能导致文件数超过默认分页大小时遗漏文件。",
-      "evidence": "patch 被截断，但可见 fetchPullRequestFiles 函数返回 ChangedFile 数组，未发现分页参数或循环逻辑。",
+      "evidence": "可见 fetchPullRequestFiles 函数返回 ChangedFile 数组，未发现分页参数或循环逻辑。",
       "impact": "对于文件数较多的 PR，分析可能不完整，导致漏检风险。",
       "suggestion": "请人工确认是否已处理分页，如有必要，增加分页循环以获取所有变更文件。",
       "confidence": 0.5
@@ -225,7 +199,6 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
       "level": "low",
       "type": "test-missing",
       "filePath": "tests/pr-analyze-route.test.ts",
-      "position": "未提供",
       "description": "测试中使用 globalThis.fetch 直接 mock，可能污染全局状态，影响其他测试的执行。",
       "evidence": "测试代码直接给 globalThis.fetch 赋值箭头函数，未在测试后清理。",
       "impact": "可能导致其他测试因 mock 残留而意外失败或成功。",
@@ -270,7 +243,7 @@ https://github.com/yuewithme/ai-pr-review-assistant/pull/2
   },
   "conclusion": {
     "decision": "建议重点人工复查",
-    "reason": "关键文件 lib/ai-review.ts 和 lib/github.ts 因上下文截断无法完整审查，存在分页缺失与大文件可维护性风险。建议人工核实 GitHub API 分页处理、AI 调用错误处理和模块划分。"
+    "reason": "关键文件 lib/ai-review.ts 和 lib/github.ts 涉及较多核心逻辑变更，存在分页缺失与大文件可维护性风险。建议重点核实 GitHub API 分页处理、AI 调用错误处理和模块划分。"
   }
 }
 ```

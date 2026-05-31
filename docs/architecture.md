@@ -4,42 +4,63 @@
 
 ```text
 PR URL
-  -> CLI
+  -> Next.js API route
   -> GitHub Client
-  -> Diff Parser
+  -> PR Data Fetcher
+  -> Rule Checker
   -> Context Builder
-  -> Risk Analyzer
-  -> Review Generator
-  -> Report Renderer
+  -> AI Review Analyzer
+  -> Structured Analysis JSON
+  -> Display/HTML Report Renderer
 ```
 
 ## Components
 
-### CLI
+### API Routes
 
-Receives the PR URL and command options, then coordinates the full review workflow.
+Receives the PR URL and coordinates backend workflows through Next.js App Router endpoints.
+
+- `POST /api/pr/parse`
+- `POST /api/pr/fetch`
+- `POST /api/pr/analyze`
 
 ### GitHub Client
 
 Fetches PR title, description, file changes, commit information, and diff content from GitHub.
 
-### Diff Parser
+### PR Data Fetcher
 
-Turns raw diff text into structured data: changed files, hunks, added lines, deleted lines, and affected paths.
+Normalizes GitHub REST API responses into project-owned types for PR metadata, changed files, patches, and limited context files.
+
+### Rule Checker
+
+Runs deterministic prechecks before AI analysis. Examples include security-sensitive paths, dependency files, deleted tests, large diffs, and maintainability signals.
 
 ### Context Builder
 
-Selects the smallest useful context for model analysis. The first version should prioritize PR metadata, diff content, changed file paths, README, dependency files, and nearby tests when available.
+Selects the smallest useful context for model analysis. It filters GitHub fields, ranks higher-risk files first, trims long patches silently, and avoids leaking trimming details into the final report.
 
-### Risk Analyzer
+### AI Review Analyzer
 
-Uses deterministic rules to flag suspicious patterns before model analysis. Examples include security-sensitive paths, deleted tests, large diffs, configuration changes, and exception handling changes.
+Uses AI prompts to produce structured PR review analysis:
 
-### Review Generator
+- PR change summary.
+- Risk explanations.
+- Review suggestions.
+- File-level summaries.
+- Test suggestions.
+- Overall conclusion.
 
-Uses AI prompts to produce change summaries, risk explanations, review suggestions, and author questions.
+### Prompt Templates
+
+Prompt templates are stored in `prompts/` and documented in `docs/prompt-design.md`.
+
+The prompt layers are:
+
+- Analysis prompts.
+- Display view-model prompts.
+- HTML report prompts.
 
 ### Report Renderer
 
-Formats the final result into Markdown or JSON for terminal output, CI logs, or future GitHub comments.
-
+Formats the final result into structured JSON or a human-readable HTML report. The current HTML report format is fixed by `prompts/report-html-system.md` and `prompts/report-html-user.md`.
