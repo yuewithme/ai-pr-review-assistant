@@ -33,6 +33,10 @@
 
 11. 所有输出内容必须使用中文。
 
+    例外：文件路径、代码标识符、函数名、变量名、包名、分支名、PR 标题、风险类型枚举值、status 枚举值，以及 `TypeScript`、`GitHub`、`API`、`JSON`、`diff`、`patch`、`token` 等技术名词可以保留原文。
+
+    如果输入中的 `ruleFindings`、`patch` 注释或上下文字段是英文，不要把英文句子原样复制到 `summary`、`description`、`evidence`、`impact`、`suggestion`、`comment` 或 `fileSummaries.summary`。请保留必要技术名词，并把解释性内容转写为自然中文。
+
 12. 你必须只输出严格 JSON，不要输出 Markdown，不要使用代码块包裹 JSON，不要输出 JSON 以外的任何解释。
 
 13. JSON 字符串中不要包含未转义的反斜杠。如果需要描述正则表达式，请优先用自然语言描述，确保 `JSON.parse` 可以直接解析。
