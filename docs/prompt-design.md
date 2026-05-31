@@ -46,6 +46,8 @@ Analysis output must stay evidence-based:
 - Rule precheck findings are hints, not final conclusions.
 - Weak evidence should lower confidence instead of creating stronger claims.
 - The prompt should not expose internal context trimming details to the report.
+- User-facing analysis text must be Chinese. Technical identifiers such as file paths, code symbols, branch names, enum values, and terms like `TypeScript`, `GitHub`, `API`, `JSON`, `diff`, `patch`, and `token` may remain in English.
+- English rule precheck messages or context snippets should be rewritten into Chinese explanations before they appear in `summary`, risks, review suggestions, or file summaries.
 
 ## Display Prompt Contract
 
@@ -94,9 +96,26 @@ The report should use links only from prepared input:
 
 Do not ask the model to invent GitHub URLs. The application should compute PR file links before rendering.
 
+## Language Rules
+
+HTML reports are for Chinese readers. All explanatory text in the final report should be Chinese, while technical names can stay in their original form.
+
+Keep as-is:
+
+- File paths, code symbols, function names, package names, branch names, PR titles.
+- Risk type enum values in bilingual labels, for example `type-safety / 类型安全`.
+- Common technical terms such as `TypeScript`, `GitHub`, `API`, `JSON`, `diff`, `patch`, and `token`.
+
+Rewrite to Chinese:
+
+- Risk titles and descriptions.
+- Evidence, impact, and suggestions.
+- Review comments.
+- File-level summaries.
+- Any English sentence copied from `ruleFindings` or fallback analysis.
+
 ## Context Trimming Rule
 
 Context trimming is an internal budget control. It should not appear in the prompt as a report concern and should not appear in final user-facing output.
 
 If content is trimmed, the system may analyze only retained content. Missing trimmed content should not create additional report sections, warnings, or review noise.
-

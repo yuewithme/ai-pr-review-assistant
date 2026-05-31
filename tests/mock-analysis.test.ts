@@ -53,9 +53,11 @@ test("mockAnalysisResult returns a stable analysis result from real changed file
     additions: 20,
     deletions: 5,
     changes: 25,
-    summary: "modified src/auth/login.ts with 20 additions and 5 deletions.",
+    summary: "src/auth/login.ts 状态为 modified，新增 20 行，删除 5 行。",
   });
   assert.equal(result.risks.length, 1);
   assert.equal(result.risks[0].type, "permission");
   assert.equal(result.risks[0].confidence, 0.6);
+  assert.match(result.risks[0].message, /规则预检测/);
+  assert.match(result.reviewSuggestions[0].message, /合并前复核/);
 });
