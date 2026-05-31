@@ -47,11 +47,11 @@ GitHub PR 链接
 - 不接账号系统和数据库。
 - 浏览器插件只作为轻量入口，不保存 GitHub Token 或 AI Key。
 
-## 使用方式
+## 运行模式
 
-### 方式一：浏览器插件使用
+当前产品只保留一种面向用户的运行方式：浏览器插件模式。
 
-插件适合日常 review 场景。
+插件是用户入口，后端服务负责实际分析。用户不需要理解后端接口，也不需要手动调用 API；正常使用时只需要在 GitHub PR 页面点击插件即可。
 
 1. 打开 Chrome 或 Chromium 浏览器。
 2. 进入 `chrome://extensions`。
@@ -74,37 +74,9 @@ GitHub PR 链接
 - 复制 Review 建议。
 - 查看最近 5 条报告记录，并选择指定报告打开或下载。
 
-### 方式二：后端接口使用
-
-如果不使用插件，也可以直接调用接口。
-
-```bash
-curl -X POST http://localhost:3000/api/pr/report-html \
-  -H "Content-Type: application/json" \
-  -d "{\"prUrl\":\"https://github.com/owner/repo/pull/123\"}"
-```
-
-返回结构：
-
-```json
-{
-  "success": true,
-  "data": {
-    "analysisId": "string",
-    "prUrl": "https://github.com/owner/repo/pull/123",
-    "html": "<!doctype html>..."
-  }
-}
-```
-
-也可以使用更底层的接口：
-
-- `POST /api/pr/parse`：解析 PR 链接。
-- `POST /api/pr/fetch`：获取 PR 数据、changed files、patch 和规则预检测结果。
-- `POST /api/pr/analyze`：返回结构化 AI 分析 JSON。
-- `POST /api/pr/report-html`：返回最终 HTML 报告。
-
 ## 本地运行
+
+本地运行主要用于开发和调试插件背后的后端服务。
 
 安装依赖：
 
@@ -219,16 +191,6 @@ tests/                 Node 和 Python 测试
 - 不把截断提示写进最终报告。
 
 规则预检测结果只作为分析提示，不直接等同于最终风险。AI 需要结合 diff 证据、文件路径和上下文判断风险等级。
-
-## 未来扩展
-
-- 支持数据库保存历史报告。
-- 支持团队维度的项目配置和规则配置。
-- 支持 GitHub App 授权和私有仓库分析。
-- 支持把 Review 建议一键提交到 GitHub PR。
-- 支持更多代码语言的 AST 级规则检测。
-- 支持分批分析大型 PR，并合并多轮分析结果。
-- 支持多模型对比和模型路由。
 
 ## 当前状态
 
