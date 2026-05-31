@@ -1,7 +1,5 @@
-const DEFAULT_BACKEND_URL = "http://localhost:3000";
 const CURRENT_TASK_KEY = "currentTask";
 
-const backendUrlInput = document.getElementById("backendUrlInput");
 const prUrlInput = document.getElementById("prUrlInput");
 const analyzeButton = document.getElementById("analyzeButton");
 const statusText = document.getElementById("statusText");
@@ -13,7 +11,6 @@ const historyList = document.getElementById("historyList");
 let currentReport = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await restoreSettings();
   await autofillCurrentPrUrl();
   await restoreCurrentTask();
   await renderHistory();
@@ -22,7 +19,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   reopenButton.addEventListener("click", reopenCurrentReport);
   downloadButton.addEventListener("click", downloadCurrentReport);
   copyButton.addEventListener("click", copyCurrentReviewSuggestions);
-  backendUrlInput.addEventListener("change", saveBackendUrl);
 
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
     const taskChange = changes[CURRENT_TASK_KEY];
@@ -35,17 +31,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderHistory();
   });
 });
-
-async function restoreSettings() {
-  const { lastBackendUrl } = await chrome.storage.local.get(["lastBackendUrl"]);
-  backendUrlInput.value = lastBackendUrl || DEFAULT_BACKEND_URL;
-}
-
-async function saveBackendUrl() {
-  await chrome.storage.local.set({
-    lastBackendUrl: normalizeBackendUrl(backendUrlInput.value),
-  });
-}
 
 async function autofillCurrentPrUrl() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -69,9 +54,6 @@ async function analyzeCurrentPr() {
     return;
   }
 
-  const backendUrl = normalizeBackendUrl(backendUrlInput.value);
-  await chrome.storage.local.set({ lastBackendUrl: backendUrl });
-
   setBusy(true);
   setActionButtons(false);
   resetSteps();
@@ -81,7 +63,7 @@ async function analyzeCurrentPr() {
   try {
     const result = await chrome.runtime.sendMessage({
       type: "START_ANALYSIS",
-      payload: { prUrl, backendUrl },
+      payload: { prUrl },
     });
 
     if (!result?.success) {
@@ -113,7 +95,6 @@ async function restoreCurrentTask() {
 async function applyTaskState(task) {
   resetSteps();
   prUrlInput.value = task.prUrl || prUrlInput.value;
-  backendUrlInput.value = task.backendUrl || backendUrlInput.value;
   setStep(task.step || "parse");
   setStatus(task.message || "恢复上次分析状态", task.status === "failed" ? "error" : "normal");
 
@@ -239,15 +220,10 @@ function normalizeGitHubPrUrl(value) {
   }
 }
 
-function normalizeBackendUrl(value) {
-  return (value || DEFAULT_BACKEND_URL).trim().replace(/\/+$/, "");
-}
-
 function setBusy(isBusy) {
   analyzeButton.disabled = isBusy;
   analyzeButton.textContent = isBusy ? "分析进行中" : "开始分析";
   prUrlInput.disabled = isBusy;
-  backendUrlInput.disabled = isBusy;
 }
 
 function setActionButtons(enabled) {

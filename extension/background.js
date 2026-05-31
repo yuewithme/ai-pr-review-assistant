@@ -1,16 +1,6 @@
-const DEFAULT_BACKEND_URL = "http://localhost:3000";
+const DEFAULT_BACKEND_URL = "https://ai-pr-review-assistant-vercel.vercel.app";
 const MAX_RECENT_REPORTS = 5;
 const CURRENT_TASK_KEY = "currentTask";
-
-chrome.runtime.onInstalled.addListener(async () => {
-  const { lastBackendUrl } = await chrome.storage.local.get(["lastBackendUrl"]);
-
-  if (!lastBackendUrl) {
-    await chrome.storage.local.set({
-      lastBackendUrl: DEFAULT_BACKEND_URL,
-    });
-  }
-});
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== "START_ANALYSIS") {
@@ -31,13 +21,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 async function runAnalysis(payload) {
   const prUrl = payload?.prUrl;
-  const backendUrl = normalizeBackendUrl(payload?.backendUrl);
+  const backendUrl = DEFAULT_BACKEND_URL;
 
   if (!prUrl) {
     throw new Error("缺少 GitHub PR 链接");
   }
 
-  await chrome.storage.local.set({ lastBackendUrl: backendUrl });
   await saveCurrentTask({
     status: "running",
     step: "parse",
@@ -158,10 +147,6 @@ async function updateCurrentTask(patch) {
     ...currentTask,
     ...patch,
   });
-}
-
-function normalizeBackendUrl(value) {
-  return (value || DEFAULT_BACKEND_URL).trim().replace(/\/+$/, "");
 }
 
 function extractHtmlTitle(html) {

@@ -20,9 +20,6 @@
   "permissions": ["activeTab", "storage", "tabs", "downloads"],
   "host_permissions": [
     "https://github.com/*",
-    "http://localhost:3000/*",
-    "https://*.vercel.app/*",
-    "https://*.netlify.app/*"
+    "https://ai-pr-review-assistant-vercel.vercel.app/*"
   ]
 }
-
