@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "AI PR Review Assistant",
+  "description": "Analyze a GitHub Pull Request and open an AI-generated HTML review report.",
+  "version": "0.1.0",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI PR Review"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*/pull/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": ["activeTab", "storage", "tabs", "downloads"],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://ai-pr-review-assistant-vercel.vercel.app/*"
+  ]
+}

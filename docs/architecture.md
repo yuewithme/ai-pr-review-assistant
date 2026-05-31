@@ -4,7 +4,7 @@
 
 ```text
 PR URL
-  -> Next.js API route
+  -> Chrome extension popup or Next.js API route
   -> GitHub Client
   -> PR Data Fetcher
   -> Rule Checker
@@ -23,6 +23,13 @@ Receives the PR URL and coordinates backend workflows through Next.js App Router
 - `POST /api/pr/parse`
 - `POST /api/pr/fetch`
 - `POST /api/pr/analyze`
+- `POST /api/pr/report-html`
+
+### Browser Extension
+
+Provides the lightweight user entry point. It detects whether the active tab is a GitHub PR page, auto-fills the PR URL when possible, calls the backend HTML report endpoint, and opens the generated report in a new tab.
+
+The extension stores only recent report metadata in `chrome.storage.local`. Full HTML reports are kept in `chrome.storage.session` for the current browser session.
 
 ### GitHub Client
 
@@ -49,7 +56,6 @@ Uses AI prompts to produce structured PR review analysis:
 - Review suggestions.
 - File-level summaries.
 - Test suggestions.
-- Overall conclusion.
 
 ### Prompt Templates
 
@@ -63,4 +69,4 @@ The prompt layers are:
 
 ### Report Renderer
 
-Formats the final result into structured JSON or a human-readable HTML report. The current HTML report format is fixed by `prompts/report-html-system.md` and `prompts/report-html-user.md`.
+Formats the final result into structured JSON or a human-readable HTML report. The current HTML report format is implemented by the report renderer and documented by `prompts/report-html-system.md` and `prompts/report-html-user.md`.

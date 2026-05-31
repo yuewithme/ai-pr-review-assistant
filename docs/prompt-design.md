@@ -37,7 +37,6 @@ The analysis prompt should only generate structured review content:
 - Review suggestions.
 - File-level summaries.
 - Test suggestions.
-- Overall conclusion.
 
 Analysis output must stay evidence-based:
 
@@ -48,12 +47,17 @@ Analysis output must stay evidence-based:
 - The prompt should not expose internal context trimming details to the report.
 - User-facing analysis text must be Chinese. Technical identifiers such as file paths, code symbols, branch names, enum values, and terms like `TypeScript`, `GitHub`, `API`, `JSON`, `diff`, `patch`, and `token` may remain in English.
 - English rule precheck messages or context snippets should be rewritten into Chinese explanations before they appear in `summary`, risks, review suggestions, or file summaries.
+- Risk descriptions and evidence must not duplicate each other. The description states the issue; evidence explains the concrete basis from patch, rule finding, metadata, or context.
+- When possible, risk output should include a `codeSnippet` copied from `changedFiles.patch`. If no concrete snippet exists, use an empty string instead of inventing code.
+- Suggestions should be actionable for humans: what to change, what to test, and what boundary to confirm.
+- Risks may include `suggestedCode` when there is enough context to show a concrete fix in the risk detail suggestion field.
+- Review suggestions may include `currentCode` and `suggestedCode` when there is enough context to show a before/after code or test change. If the suggestion only asks for human confirmation, keep both fields empty.
 
 ## Display Prompt Contract
 
 The display prompt should not discover new risks. It only reshapes the analysis result for human reading:
 
-- Preserve risk count, level, file path, confidence, and conclusion.
+- Preserve risk count, level, file path, and confidence.
 - Improve wording for readability.
 - Keep report sections stable.
 - Keep file names and review comments easy to scan.
@@ -70,9 +74,24 @@ The HTML prompt fixes the report format used by the project:
 6. Review suggestions.
 7. Test suggestions.
 8. Compact file-level summaries.
-9. Overall conclusion.
+9. Footer note.
 
 Risk details must not show a separate `position` field. File names already link to the corresponding PR file diff when `fileLinks[filePath]` is available.
+
+Risk details should show:
+
+- Issue: the concise risk statement.
+- Evidence: why the model believes this risk exists.
+- Problem code: `risk.codeSnippet`, when available.
+- Link: file name or “查看该文件在 PR 中的变更” should jump to the PR Files view for that file.
+- Suggestion: detailed enough for the author to act on.
+- Suggestion code comparison: use `risk.codeSnippet` as before code and `risk.suggestedCode` as after code when available.
+- Do not render a separate overall conclusion section; it tends to repeat the risk summary without adding actionable value.
+
+Review suggestions may additionally show:
+
+- Code comparison: `suggestion.currentCode` and `suggestion.suggestedCode`, when available, under the matching review comment.
+- Actionable review comment: identify the exact code concern, explain why it matters, and state the next change or test to add.
 
 Risk types must be displayed in English and Chinese, for example:
 

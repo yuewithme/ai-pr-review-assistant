@@ -25,7 +25,7 @@ const prData: FetchedPrData = {
       additions: 20,
       deletions: 5,
       changes: 25,
-      patch: "@@ -1 +1 @@",
+      patch: "@@ -1 +1 @@\n+ const canLogin = true;",
     },
   ],
   contextFiles: [],
@@ -59,5 +59,10 @@ test("mockAnalysisResult returns a stable analysis result from real changed file
   assert.equal(result.risks[0].type, "permission");
   assert.equal(result.risks[0].confidence, 0.6);
   assert.match(result.risks[0].message, /规则预检测/);
+  assert.match(result.risks[0].evidence, /来源于规则预检测/);
+  assert.equal(result.risks[0].codeSnippet, "+ const canLogin = true;");
+  assert.match(result.risks[0].suggestedCode || "", /const canLogin = true/);
   assert.match(result.reviewSuggestions[0].message, /合并前复核/);
+  assert.match(result.reviewSuggestions[0].currentCode || "", /const canLogin = true/);
+  assert.match(result.reviewSuggestions[0].suggestedCode || "", /const canLogin = true/);
 });
