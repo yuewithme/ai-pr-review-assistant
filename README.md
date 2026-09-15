@@ -1,8 +1,51 @@
 # AI PR Review Assistant
 
-AI PR Review Assistant 是一个面向 GitHub Pull Request 的 AI 代码评审助手。用户输入或在浏览器插件中识别一个 GitHub PR 链接，系统会自动获取 PR 信息和代码 diff，经过规则预检测、上下文整理和 AI 分析后，生成一份中文 HTML Review 报告。
+AI PR Review Assistant 是一个面向 GitHub Pull Request 的 AI 代码评审助手。推荐通过 `ai-pr-review` skill 调用：提供 PR 链接，由当前 AI 获取变更、查证相关代码，并输出中文审查报告，帮助判断本次改动能否正确使用。
 
 项目目标不是替代人工 reviewer，而是帮助 reviewer 更快理解 PR 改动、定位高风险文件、获得可复制的 Review 建议，并把注意力集中在真正可能影响功能、安全、稳定性和可维护性的地方。
+
+## 使用 Skill（推荐）
+
+Skill 源码位于 [`skills/ai-pr-review/`](skills/ai-pr-review/SKILL.md)，可以独立复制和安装，不依赖本项目的 Next.js 服务、npm 包或 DeepSeek API Key。需要支持 skill 和命令执行的 AI 助手，以及 Python 3.10+。
+
+在 Codex 中，可以让 `$skill-installer` 从本仓库安装 `skills/ai-pr-review`，也可以手动将整个目录复制到用户 skill 目录。Windows PowerShell 在仓库根目录运行：
+
+```powershell
+$skillRoot = if ($env:CODEX_HOME) { Join-Path $env:CODEX_HOME 'skills' } else { Join-Path $env:USERPROFILE '.codex\skills' }
+$skillTarget = Join-Path $skillRoot 'ai-pr-review'
+if (Test-Path -LiteralPath $skillTarget) { throw 'ai-pr-review 已存在，请先检查已有版本。' }
+New-Item -ItemType Directory -Path $skillRoot -Force | Out-Null
+Copy-Item -LiteralPath '.\skills\ai-pr-review' -Destination $skillTarget -Recurse
+```
+
+安装后在 Codex 中调用；如果未识别新 skill，重启应用：
+
+```text
+$ai-pr-review 审查这个 PR 是否能正确使用：https://github.com/OWNER/REPO/pull/123
+重点检查功能正确性、回归风险和实际验证情况。
+```
+
+### 身份与输出
+
+- 已有 `gh auth login` 登录态时自动复用 GitHub CLI；也可以使用环境中的 `GH_TOKEN` 或 `GITHUB_TOKEN`。私有 PR 需要对应访问权限。
+- 没有凭据时可以读取公开 PR，但受到匿名 API 速率限制。
+- 默认在对话中输出结论、带文件位置的问题、实际验证结果和覆盖限制。需要保存或 HTML 报告时，在请求中说明。
+- PR 文件列表完整分页；代码读取固定在提交 SHA；缺失 patch、版本变化或读取失败会明确提示。
+- Skill 默认只审查，不修改代码、发布评论或合并 PR。静态审查和实际运行验证在报告中分开说明。
+
+### 单独检查数据读取
+
+```powershell
+python .\skills\ai-pr-review\scripts\github_pr.py fetch 'https://github.com/OWNER/REPO/pull/123'
+```
+
+脚本输出临时目录中的 `contextFile` 路径与覆盖统计。**脚本只获取审查材料，AI 加载 skill 后才会执行代码审查。** 子命令 `file` 按固定版本读取文件，`check` 检查 PR 提交是否变化；参数见 `--help`。
+
+设计和验收标准见 [迁移计划](docs/pr-review-skill-plan.md)，实施情况见 [开发日志](docs/development/2026-09-15-pr-review-skill.md)，实际执行证据见 [Skill 验收记录](docs/pr-review-skill-validation.md)。
+
+## 原有 Chrome 插件模式
+
+以下介绍已有 Chrome 扩展与后端的能力和运行方式。这套独立流程继续保留；其中的 DeepSeek 配置、HTML 模板和插件历史记录仅适用于浏览器插件模式。
 
 ## 项目演示视频
 
@@ -53,7 +96,7 @@ GitHub PR 链接
 
 ## 运行模式
 
-当前产品只保留一种面向用户的运行方式：浏览器插件模式。
+除推荐的 skill 入口外，也可以继续使用浏览器插件模式。
 
 插件是用户入口，后端服务负责实际分析。用户不需要理解后端接口，也不需要手动调用 API；正常使用时只需要在 GitHub PR 页面点击插件即可。
 
@@ -80,7 +123,7 @@ GitHub PR 链接
 
 ## 本地运行
 
-本地运行主要用于开发和调试插件背后的后端服务。
+以下本地运行步骤用于开发和调试插件背后的后端服务；使用 skill 无需执行这些步骤。
 
 安装依赖：
 
@@ -164,6 +207,7 @@ HTML 报告采用固定结构，方便阅读和后续产品化：
 
 ```text
 app/                   Next.js App Router API routes
+skills/ai-pr-review/    独立 PR 审查 skill、取数脚本和审查规范
 lib/                   PR 解析、GitHub 获取、规则检测、AI 分析、HTML 渲染
 types/                 TypeScript 类型定义
 prompts/               AI 分析和 HTML 报告提示词
@@ -182,9 +226,9 @@ tests/                 Node 和 Python 测试
 - `lib/report-html.ts`：把结构化分析结果渲染成固定 HTML 报告。
 - `extension/`：插件弹窗、后台任务、报告页和本地历史记录。
 
-## 模型与上下文策略
+## 模型与上下文策略（浏览器后端）
 
-当前版本默认使用 DeepSeek 模型。模型调用只发生在服务端，插件不会接触 API Key。
+浏览器插件后端默认使用 DeepSeek 模型。模型调用只发生在服务端，插件不会接触 API Key。
 
 上下文不会直接把 GitHub API 原始返回值全部丢给模型，而是先做一层标准化处理：
 
@@ -198,7 +242,7 @@ tests/                 Node 和 Python 测试
 
 ## 后续开发方向
 
-后续开发会继续围绕插件形态展开，重点不是增加复杂入口，而是提升分析可信度、报告可读性和真实 Review 场景中的可用性。
+后续优先围绕 skill 的审查可信度和真实使用验证迭代。下面保留的浏览器插件、数据库及 GitHub 集成方向属于可选探索，不是 skill 的运行依赖或当前承诺。
 
 优先考虑以下方向：
 
@@ -216,7 +260,7 @@ tests/                 Node 和 Python 测试
 
 4. 插件体验优化
 
-   插件仍然作为唯一用户入口。后续重点优化 GitHub PR 页面识别、分析状态恢复、失败提示、历史报告管理、重新分析、下载和复制 Review 建议等交互，让用户尽量只需要在 PR 页面点击一次就能得到报告。
+   浏览器插件作为另一个入口，可继续优化 GitHub PR 页面识别、分析状态恢复、失败提示、历史报告管理、重新分析、下载和复制 Review 建议等交互。
 
 5. 报告展示打磨
 
@@ -238,7 +282,7 @@ tests/                 Node 和 Python 测试
 
 ```text
 分析质量和证据链
-  -> 插件体验
+  -> Skill 调用和实际使用验证
   -> 报告展示
   -> 历史记录
   -> GitHub 深度集成
@@ -258,4 +302,4 @@ tests/                 Node 和 Python 测试
 - Chrome 插件 MVP。
 - 单元测试和样例报告。
 
-当前版本适合作为 AI PR Review Assistant 的 MVP 原型，用于展示完整分析链路和浏览器插件交互流程。
+浏览器版本保留原有完整分析链路；skill 版本独立提供基于代码证据的 PR 审查流程，实际验收情况记录在开发日志中。

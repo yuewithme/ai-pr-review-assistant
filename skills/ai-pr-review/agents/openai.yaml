@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI PR 审查"
+  short_description: "审查 GitHub PR 的功能正确性与回归风险，提供中文证据和验证结果"
+  default_prompt: "使用 $ai-pr-review 审查这个 GitHub PR 是否能正确使用，重点核实代码证据、回归风险和实际验证情况。"
